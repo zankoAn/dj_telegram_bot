@@ -1,0 +1,987 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'admin-bg': 'var(--body-bg)',
+                    'admin-fg': 'var(--body-fg)',
+                    'admin-quiet': 'var(--body-quiet-color)',
+                    'admin-border': 'var(--border-color)',
+                    'admin-dark': 'var(--darkened-bg)',
+                    'admin-selected': 'var(--selected-bg)',
+                    'admin-primary': 'var(--primary)',
+                    'admin-error': 'var(--error-fg)',
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    .kb-builder {
+        font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+        direction: rtl;
+    }
+
+    /* ---------- Panel ---------- */
+    .kb-panel {
+        background: linear-gradient(180deg, var(--body-bg) 0%, var(--darkened-bg) 140%);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 10px 30px -12px rgba(0,0,0,.15);
+    }
+
+    .kb-section-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .02em;
+        color: var(--body-quiet-color);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .kb-section-title i { font-size: 10px; opacity: .7; }
+
+    /* ---------- Inputs ---------- */
+    .kb-input, .kb-textarea, .kb-select {
+        transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+    }
+    .kb-input:hover, .kb-textarea:hover {
+        border-color: color-mix(in srgb, var(--primary) 40%, var(--border-color));
+    }
+
+    /* ---------- Type switch ---------- */
+    .kb-type-btn {
+        position: relative;
+        overflow: hidden;
+        transition: all .2s cubic-bezier(.4,0,.2,1);
+    }
+    .kb-type-btn[data-active="true"] {
+        box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--primary) 55%, transparent);
+    }
+    .kb-type-btn i { transition: transform .2s ease; }
+    .kb-type-btn:hover i { transform: scale(1.12); }
+
+    /* ---------- Toggle switch refinement ---------- */
+    .kb-toggle-row {
+        transition: background-color .15s ease;
+    }
+    .kb-toggle-row:hover {
+        background-color: color-mix(in srgb, var(--primary) 5%, transparent);
+    }
+
+    /* ---------- Rows / chips ---------- */
+    .kb-row-card {
+        transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+    }
+    .kb-row-card:hover {
+        border-color: color-mix(in srgb, var(--primary) 35%, var(--border-color));
+    }
+    .kb-row-handle {
+        transition: color .15s ease, transform .15s ease;
+    }
+    .kb-row-handle:hover { color: var(--primary); transform: scale(1.15); }
+    .kb-row-handle:active { cursor: grabbing; }
+
+    .kb-chip {
+        position: relative;
+        transition: border-color .16s ease, box-shadow .16s ease, transform .12s ease, background-color .16s ease;
+    }
+    .kb-chip:hover {
+        box-shadow: 0 6px 16px -8px rgba(0,0,0,.25);
+        transform: translateY(-1px);
+    }
+    .kb-chip::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 3px;
+        background: transparent;
+        transition: background-color .16s ease;
+    }
+    .kb-chip:hover::before {
+        background: var(--primary);
+    }
+    .kb-chip.sortable-ghost {
+        opacity: .35;
+        transform: scale(.97);
+    }
+    .kb-chip.sortable-chosen {
+        box-shadow: 0 8px 22px -8px rgba(0,0,0,.35);
+    }
+
+    .kb-icon-btn {
+        transition: color .15s ease, transform .15s ease, background-color .15s ease;
+    }
+    .kb-icon-btn:hover { transform: scale(1.15); }
+
+    .kb-add-row-btn {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 92%, black), var(--primary));
+        box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--primary) 60%, transparent);
+        transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+    .kb-add-row-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.06);
+        box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary) 70%, transparent);
+    }
+    .kb-add-row-btn:active { transform: translateY(0); }
+
+    .kb-empty-state {
+        background: repeating-linear-gradient(135deg, transparent, transparent 10px, color-mix(in srgb, var(--primary) 3%, transparent) 10px, color-mix(in srgb, var(--primary) 3%, transparent) 20px);
+        transition: border-color .2s ease;
+    }
+
+    /* ---------- Modal ---------- */
+    .kb-modal-overlay {
+        opacity: 0;
+        transition: opacity .2s ease;
+    }
+    .kb-modal-overlay.kb-modal-open { opacity: 1; }
+    .kb-modal-panel {
+        transform: scale(.95) translateY(10px);
+        opacity: 0;
+        transition: transform .22s cubic-bezier(.16,1,.3,1), opacity .2s ease;
+    }
+    .kb-modal-overlay.kb-modal-open .kb-modal-panel {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    .kb-modal-header {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent);
+    }
+
+    .kb-field-group {
+        border-radius: 14px;
+        transition: background-color .15s ease;
+    }
+
+    /* ---------- Preview phone ---------- */
+    .kb-phone {
+        background: radial-gradient(circle at 30% 0%, #2a3744 0%, #131c24 60%);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .kb-phone-notch {
+        position: absolute;
+        top: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 120px; height: 22px;
+        background: #0b0f14;
+        border-radius: 0 0 14px 14px;
+        z-index: 5;
+    }
+    .kb-phone-bubble {
+        background: #1f2c38;
+        color: #e7edf3;
+        border-radius: 16px 16px 16px 5px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        max-width: 82%;
+        line-height: 1.6;
+        box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .kb-preview-btn {
+        transition: filter .15s ease, transform .1s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
+    .kb-preview-btn:hover { filter: brightness(1.1); }
+    .kb-preview-btn:active { transform: scale(.97); }
+
+    .kb-preview-label {
+        font-size: 10.5px;
+        letter-spacing: .06em;
+        color: rgba(255,255,255,.35);
+        text-transform: uppercase;
+    }
+
+    /* ---------- Char counter ---------- */
+    .kb-char-count {
+        font-size: 11px;
+        color: var(--body-quiet-color);
+        transition: color .15s ease;
+        font-variant-numeric: tabular-nums;
+    }
+    .kb-char-count.kb-near-limit { color: #e0a300; }
+    .kb-char-count.kb-over { color: var(--error-fg); font-weight: 700; }
+
+    /* ---------- Toast ---------- */
+    #kb-toast-wrap {
+        position: fixed;
+        bottom: 24px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 80;
+        display: flex; flex-direction: column; gap: 8px; align-items: center;
+        pointer-events: none;
+    }
+    .kb-toast {
+        background: color-mix(in srgb, var(--darkened-bg) 92%, black 8%);
+        border: 1px solid var(--border-color);
+        color: var(--body-fg);
+        padding: 9px 20px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 600;
+        box-shadow: 0 10px 24px -6px rgba(0,0,0,.35);
+        opacity: 0;
+        transform: translateY(10px) scale(.95);
+        transition: opacity .22s ease, transform .22s cubic-bezier(.16,1,.3,1);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .kb-toast i { color: var(--primary); font-size: 11px; }
+    .kb-toast.show { opacity: 1; transform: translateY(0) scale(1); }
+
+    /* subtle fade-in for the whole builder */
+    .kb-fade-in { animation: kbFadeIn .35s ease both; }
+    @keyframes kbFadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes kbPulse {
+        0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 35%, transparent); }
+        50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 0%, transparent); }
+    }
+    .kb-new-row { animation: kbPulse 1.1s ease 1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="keyboard-form" method="post" enctype="multipart/form-data" class="kb-builder">
+    {% csrf_token %}
+
+    <div class="flex gap-6 justify-center items-start flex-wrap my-2.5">
+
+        <!-- Editor Column -->
+        <div class="flex-1 min-w-80 max-w-2xl kb-fade-in">
+            <div class="kb-panel rounded-2xl p-6 flex flex-col gap-7">
+
+                <!-- Related Step -->
+                <div class="flex flex-col gap-2">
+                    <label for="related_step" class="kb-section-title"><i class="fa-solid fa-diagram-project"></i>Related Step</label>
+                    <input id="related_step" name="related_step" type="text"
+                        value="{{ original.related_step|default:'home' }}"
+                        class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-offset-0 focus:ring-admin-primary/20">
+                </div>
+
+                <!-- Message Text -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <label for="message_text" class="kb-section-title"><i class="fa-solid fa-message"></i>متن پیام</label>
+                        <span id="message-char-count" class="kb-char-count">0</span>
+                    </div>
+                    <textarea id="message_text" name="text" rows="4"
+                        class="kb-textarea w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 text-right resize-y focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-offset-0 focus:ring-admin-primary/20 leading-relaxed">{{original.text|default:'' }}</textarea>
+                </div>
+
+                <!-- Keyboard Type -->
+                <div class="flex flex-col gap-2">
+                    <label class="kb-section-title"><i class="fa-solid fa-table-cells"></i>نوع کیبورد</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="setKeyboardType('INLINE')" id="btn-inline"
+                            class="kb-type-btn py-3.5 px-4 rounded-xl border border-admin-border bg-admin-dark text-admin-fg font-semibold text-sm flex items-center justify-center gap-2 data-[active=true]:border-admin-primary data-[active=true]:bg-admin-primary/15 data-[active=true]:text-admin-primary">
+                            <i class="fa-regular fa-square"></i> Inline Keyboard
+                        </button>
+                        <button type="button" onclick="setKeyboardType('REPLY')" id="btn-reply"
+                            class="kb-type-btn py-3.5 px-4 rounded-xl border border-admin-border bg-admin-dark text-admin-fg font-semibold text-sm flex items-center justify-center gap-2 data-[active=true]:border-admin-primary data-[active=true]:bg-admin-primary/15 data-[active=true]:text-admin-primary">
+                            <i class="fa-solid fa-keyboard"></i> Reply Keyboard
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reply Options (Toggles) -->
+                <div id="reply-options" class="flex flex-col gap-2">
+                    <label class="kb-section-title"><i class="fa-solid fa-sliders"></i>تنظیمات Reply Keyboard</label>
+                    <div class="border border-admin-border rounded-xl bg-admin-dark overflow-hidden">
+
+                        <div class="kb-toggle-row flex items-center justify-between gap-4 p-3.5 border-b border-admin-border">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-sm font-semibold text-admin-fg">Resize Keyboard</span>
+                                <span class="text-xs text-admin-quiet">اندازه‌ی دکمه‌ها با تعدادشون تنظیم بشه</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                <input type="checkbox" id="resize_keyboard" checked class="sr-only peer">
+                                <div class="w-10 h-6 bg-admin-border peer-checked:bg-admin-primary rounded-full transition-colors duration-200
+                                            after:content-[''] after:absolute after:top-0.75 after:left-0.75 after:h-[18px] after:w-[18px]
+                                            after:bg-admin-bg after:rounded-full after:shadow after:transition-transform after:duration-200
+                                            peer-checked:after:translate-x-[-18px]"></div>
+                            </label>
+                        </div>
+
+                        <div class="kb-toggle-row flex items-center justify-between gap-4 p-3.5">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-sm font-semibold text-admin-fg">One Time Keyboard</span>
+                                <span class="text-xs text-admin-quiet">بعد از یک بار استفاده، کیبورد بسته بشه</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                <input type="checkbox" id="one_time_keyboard" class="sr-only peer">
+                                <div class="w-10 h-6 bg-admin-border peer-checked:bg-admin-primary rounded-full transition-colors duration-200
+                                            after:content-[''] after:absolute after:top-0.75 after:left-0.75 after:h-[18px] after:w-[18px]
+                                            after:bg-admin-bg after:rounded-full after:shadow after:transition-transform after:duration-200
+                                            peer-checked:after:translate-x-[-18px]"></div>
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Buttons Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="kb-section-title text-[13px]"><i class="fa-solid fa-list"></i>دکمه‌ها</h2>
+                        <button type="button" onclick="addNewRow()"
+                            class="kb-add-row-btn px-4 py-2 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus text-[10px]"></i> ردیف جدید
+                        </button>
+                    </div>
+                    <p class="text-xs text-admin-quiet mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-[11px] opacity-60"></i>
+                        دکمه‌ها و ردیف‌ها را با گرفتنِ آیکون <i class="fa-solid fa-grip-vertical"></i> بکشید و جابجا کنید
+                    </p>
+                    <div id="rows-container" class="flex flex-col gap-3"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="flex-shrink-0 sticky top-5 kb-fade-in" style="animation-delay:.08s">
+            <div class="flex items-center justify-center mb-3">
+                <span class="kb-preview-label"><i class="fa-solid fa-eye mr-1"></i> پیش‌نمایش زنده</span>
+            </div>
+            <div id="phone-shell" class="kb-phone relative w-80 h-[560px] rounded-[38px] border-[6px] border-slate-800 overflow-hidden flex flex-col">
+                <div class="kb-phone-notch"></div>
+                <div class="flex-1 pt-9 px-4 flex flex-col justify-end pb-4 overflow-hidden">
+                    <div id="preview-bubble-wrap" class="flex flex-col mb-2"></div>
+                    <div id="preview-keyboard" class="flex flex-col gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Button Edit Modal -->
+    <div id="button-modal"
+        class="kb-modal-overlay hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="kb-modal-panel w-full max-w-3xl mx-4 bg-admin-bg border border-admin-border rounded-2xl shadow-2xl overflow-hidden">
+
+            <div class="kb-modal-header px-6 py-5 border-b border-admin-border flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-admin-primary/15 flex items-center justify-center text-admin-primary">
+                    <i class="fa-solid fa-pen text-sm"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-admin-fg">ویرایش دکمه</h3>
+            </div>
+
+            <div class="px-6 py-5 flex flex-col gap-5 text-right max-h-[70vh] overflow-y-auto">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="btn-text" class="text-xs font-semibold text-admin-quiet">متن دکمه</label>
+                        <span id="btn-text-char-count" class="kb-char-count">0/64</span>
+                    </div>
+                    <input id="btn-text" type="text" maxlength="64"
+                        class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20">
+                </div>
+                <div>
+                    <label for="btn-web-app" class="text-xs font-semibold text-admin-quiet block mb-2">WebApp</label>
+                    <input id="btn-web-app" type="text" placeholder="url"
+                        class="kb-input w-full bg-admin-dark text-left text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20 text-sm">
+                </div>
+                <div>
+                    <label for="btn-style" class="text-xs font-semibold text-admin-quiet block mb-2">Style</label>
+                    <div class="grid grid-cols-4 gap-2" id="style-picker">
+                        <button type="button" data-style="" class="kb-style-swatch py-2.5 rounded-lg border border-admin-border text-xs font-semibold text-admin-fg bg-slate-600/20">None</button>
+                        <button type="button" data-style="primary" class="kb-style-swatch py-2.5 rounded-lg border border-admin-border text-xs font-semibold text-white bg-blue-700">Primary</button>
+                        <button type="button" data-style="success" class="kb-style-swatch py-2.5 rounded-lg border border-admin-border text-xs font-semibold text-white bg-green-700">Success</button>
+                        <button type="button" data-style="danger" class="kb-style-swatch py-2.5 rounded-lg border border-admin-border text-xs font-semibold text-white bg-red-700">Danger</button>
+                    </div>
+                    <input type="hidden" id="btn-style" value="">
+                </div>
+
+                <!-- Inline Button -->
+                <div id="inline-fields" class="hidden space-y-4 border-t border-admin-border pt-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="btn-url" class="text-xs font-semibold text-admin-quiet block mb-2">URL</label>
+                            <input id="btn-url" type="url" placeholder="https://example.com"
+                                class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20 text-sm">
+                        </div>
+                        <div>
+                            <label for="btn-callback" class="text-xs font-semibold text-admin-quiet block mb-2">Callback Data</label>
+                            <input id="btn-callback" type="text" placeholder="callback url"
+                                class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20 text-sm">
+                        </div>
+                        <div>
+                            <label for="btn-copy-text" class="text-xs font-semibold text-admin-quiet block mb-2">Copy Text</label>
+                            <input id="btn-copy-text" type="text" placeholder="copy text"
+                                class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20 text-sm">
+                        </div>
+                        <div>
+                            <label for="btn-login-url" class="text-xs font-semibold text-admin-quiet block mb-2">Login Url</label>
+                            <input id="btn-login-url" type="text" placeholder="login url"
+                                class="kb-input w-full bg-admin-dark text-admin-fg border border-admin-border rounded-xl px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-2 focus:ring-admin-primary/20 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reply Button -->
+                <div id="reply-fields" class="hidden space-y-3 border-t border-admin-border pt-4">
+                    <label class="kb-field-group flex items-center gap-3 cursor-pointer p-2.5 hover:bg-admin-dark">
+                        <input type="checkbox" id="btn-request-contact"
+                            class="w-4 h-4 rounded border border-admin-border bg-admin-dark cursor-pointer accent-current">
+                        <i class="fa-solid fa-phone text-admin-quiet text-sm"></i>
+                        <span class="text-sm text-admin-fg">درخواست شماره تماس</span>
+                    </label>
+                    <label class="kb-field-group flex items-center gap-3 cursor-pointer p-2.5 hover:bg-admin-dark">
+                        <input type="checkbox" id="btn-request-location"
+                            class="w-4 h-4 rounded border border-admin-border bg-admin-dark cursor-pointer accent-current">
+                        <i class="fa-solid fa-location-dot text-admin-quiet text-sm"></i>
+                        <span class="text-sm text-admin-fg">درخواست مکان</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-admin-border flex gap-2.5">
+                <button type="button" onclick="closeModal()"
+                    class="flex-1 py-3 border border-admin-error text-admin-error rounded-xl font-semibold text-sm hover:bg-admin-error/10 transition-all">
+                    انصراف
+                </button>
+                <button type="button" onclick="saveButton()"
+                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-green-600/20">
+                    ذخیره دکمه
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Django Submit Buttons -->
+    <div class="submit-row">
+        <input type="submit" value="ذخیره" name="_save" class="default">
+        <input type="submit" value="ذخیره و ادامه ویرایش" name="_continue">
+    </div>
+</form>
+
+<div id="kb-toast-wrap"></div>
+
+<script>
+    let uidCounter = 1;
+    let rowUidCounter = 1;
+    let allButtons = {};
+    let suppressClick = false;
+    let sortableInstances = [];
+    let currentEditUid = null;
+    let lastAddedRowUid = null;
+
+    let keyboardData = {
+        keyboard_type: "REPLY",
+        resize_keyboard: true,
+        one_time_keyboard: false,
+        rows: []
+    };
+
+    function showToast(msg, icon) {
+        const wrap = document.getElementById('kb-toast-wrap');
+        const el = document.createElement('div');
+        el.className = 'kb-toast';
+        el.innerHTML = `<i class="fa-solid ${icon || 'fa-check'}"></i><span>${msg}</span>`;
+        wrap.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('show'));
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 220);
+        }, 1600);
+    }
+
+    {% if original and original.keyboard %}
+        (function () {
+            const flatButtons = [
+                {% for button in original.keyboard.key_buttons.all %}
+                    {
+                        text: "{{ button.text|escapejs }}",
+                        row: {{ button.row }},
+                        column: {{ button.column }},
+                        data: {{ button.data_as_json|safe }}
+                    },
+                {% endfor %}
+            ];
+
+            const grouped = {};
+            flatButtons.forEach(b => {
+                if (!grouped[b.row]) grouped[b.row] = [];
+                grouped[b.row].push(b);
+            });
+
+            keyboardData.rows = Object.keys(grouped)
+                .sort((a, b) => Number(a) - Number(b))
+                .map(rowNum => {
+                    const uids = grouped[rowNum]
+                        .sort((a, b) => a.column - b.column)
+                        .reverse()
+                        .map(b => {
+                            const uid = uidCounter++;
+                            allButtons[uid] = { text: b.text, data: b.data || {} };
+                            return uid;
+                        });
+                    return { rowUid: rowUidCounter++, buttonUids: uids };
+                });
+            keyboardData.keyboard_type = "{{ original.keyboard.keyboard_type }}";
+            keyboardData.resize_keyboard = {{ original.keyboard.resize_keyboard|yesno:"true,false" }};
+            keyboardData.one_time_keyboard = {{ original.keyboard.one_time_keyboard|yesno:"true,false" }};
+        })();
+    {% endif %}
+
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : str;
+        return div.innerHTML;
+    }
+
+    function setKeyboardType(type) {
+        keyboardData.keyboard_type = type;
+        document.getElementById('btn-inline').dataset.active = type === 'INLINE';
+        document.getElementById('btn-reply').dataset.active = type === 'REPLY';
+        document.getElementById('reply-options').style.display = type === 'REPLY' ? '' : 'none';
+        updatePreview();
+    }
+
+    function renderRows() {
+        sortableInstances.forEach(s => s.destroy());
+        sortableInstances = [];
+
+        const container = document.getElementById('rows-container');
+        container.innerHTML = '';
+
+        if (keyboardData.rows.length === 0) {
+            container.innerHTML = `
+                <div class="kb-empty-state text-center py-14 text-admin-quiet border border-dashed border-admin-border rounded-xl flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-square-plus text-2xl opacity-40"></i>
+                    <span class="text-sm">هنوز دکمه‌ای اضافه نشده</span>
+                    <span class="text-xs opacity-70">با «ردیف جدید» شروع کنید</span>
+                </div>`;
+            return;
+        }
+
+        keyboardData.rows.forEach((row, idx) => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'kb-row-card border border-dashed border-admin-border rounded-xl p-3.5 bg-admin-bg' + (row.rowUid === lastAddedRowUid ? ' kb-new-row' : '');
+            rowDiv.dataset.rowUid = row.rowUid;
+
+            const head = document.createElement('div');
+            head.className = 'flex justify-between items-center text-xs text-admin-quiet mb-2.5';
+            head.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-grip-vertical cursor-grab text-admin-quiet px-1 kb-row-handle" title="جابجایی ردیف"></i>
+                    <span class="font-semibold">ردیف ${idx + 1}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" class="kb-icon-btn w-6 h-6 flex items-center justify-center border border-admin-border text-admin-fg rounded-md hover:border-admin-primary hover:text-admin-primary text-xs" title="افزودن دکمه به این ردیف"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="kb-icon-btn text-admin-error hover:opacity-70 text-xs font-semibold flex items-center gap-1"><i class="fa-regular fa-trash-can"></i> حذف</button>
+                </div>`;
+            head.querySelector('button:nth-of-type(1)').addEventListener('click', () => addButtonToRow(row.rowUid));
+            head.querySelector('button:nth-of-type(2)').addEventListener('click', () => deleteRow(row.rowUid));
+            rowDiv.appendChild(head);
+
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'flex flex-wrap gap-2.5 min-h-12';
+            btnContainer.style.direction = 'ltr';
+
+
+            const displayOrder = [...row.buttonUids].reverse();
+            displayOrder.forEach(uid => {
+                const btn = allButtons[uid];
+                const chip = document.createElement('div');
+                chip.className = 'kb-chip flex-1 min-w-[150px] border border-admin-border bg-admin-dark rounded-xl p-2.5 hover:border-admin-primary group cursor-pointer';
+                chip.dataset.uid = uid;
+                chip.innerHTML = `
+                    <div class="flex justify-between items-center gap-2 ps-1">
+                        <span class="text-sm text-admin-fg truncate flex-1">${escapeHtml(btn.text)}</span>
+                        <i class="fa-solid fa-trash text-sm text-admin-error opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 cursor-pointer kb-btn-delete"></i>
+                    </div>`;
+                chip.querySelector('.kb-btn-delete').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteButton(uid);
+                });
+                chip.addEventListener('click', () => {
+                    if (suppressClick) return;
+                    editButton(uid);
+                });
+                btnContainer.appendChild(chip);
+            });
+
+            rowDiv.appendChild(btnContainer);
+            container.appendChild(rowDiv);
+
+            sortableInstances.push(new Sortable(btnContainer, {
+                group: 'kb-buttons',
+                animation: 180,
+                easing: 'cubic-bezier(.4,0,.2,1)',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onStart: () => { suppressClick = true; },
+                onEnd: onButtonsDragEnd
+            }));
+        });
+
+        lastAddedRowUid = null;
+
+        sortableInstances.push(new Sortable(container, {
+            handle: '.kb-row-handle',
+            animation: 180,
+            easing: 'cubic-bezier(.4,0,.2,1)',
+            ghostClass: 'sortable-ghost',
+            onEnd: onRowsDragEnd
+        }));
+    }
+
+    function onButtonsDragEnd() {
+        syncModelFromDOM();
+        renderRows();
+        updatePreview();
+        setTimeout(() => { suppressClick = false; }, 50);
+    }
+
+    function onRowsDragEnd() {
+        syncModelFromDOM();
+        renderRows();
+        updatePreview();
+    }
+
+    function syncModelFromDOM() {
+        const newRows = [];
+        document.querySelectorAll('#rows-container > [data-row-uid]').forEach(rowEl => {
+            const rowUid = Number(rowEl.dataset.rowUid);
+            const domOrder = Array.from(rowEl.querySelectorAll('[data-uid]')).map(chip => Number(chip.dataset.uid));
+            const buttonUids = domOrder.reverse();
+            if (buttonUids.length > 0) {
+                newRows.push({ rowUid, buttonUids });
+            }
+        });
+        keyboardData.rows = newRows;
+    }
+
+    function addNewRow() {
+        const uid = uidCounter++;
+        allButtons[uid] = { text: "دکمه جدید", data: {} };
+        const rowUid = rowUidCounter++;
+        keyboardData.rows.push({ rowUid, buttonUids: [uid] });
+        lastAddedRowUid = rowUid;
+        renderRows();
+        updatePreview();
+    }
+
+    function addButtonToRow(rowUid) {
+        const row = keyboardData.rows.find(r => r.rowUid === rowUid);
+        if (!row) return;
+        const uid = uidCounter++;
+        allButtons[uid] = { text: "دکمه جدید", data: {} };
+        row.buttonUids.push(uid);
+        renderRows();
+        updatePreview();
+    }
+
+    function deleteRow(rowUid) {
+        const row = keyboardData.rows.find(r => r.rowUid === rowUid);
+        if (row) {
+            row.buttonUids.forEach(uid => delete allButtons[uid]);
+        }
+        keyboardData.rows = keyboardData.rows.filter(r => r.rowUid !== rowUid);
+        renderRows();
+        updatePreview();
+    }
+
+    function deleteButton(uid) {
+        for (const row of keyboardData.rows) {
+            const i = row.buttonUids.indexOf(uid);
+            if (i !== -1) {
+                row.buttonUids.splice(i, 1);
+                break;
+            }
+        }
+        delete allButtons[uid];
+        keyboardData.rows = keyboardData.rows.filter(r => r.buttonUids.length > 0);
+        renderRows();
+        updatePreview();
+    }
+
+    function updateBtnTextCounter() {
+        const val = document.getElementById('btn-text').value;
+        const el = document.getElementById('btn-text-char-count');
+        el.textContent = `${val.length}/64`;
+        el.classList.toggle('kb-near-limit', val.length >= 48 && val.length < 64);
+        el.classList.toggle('kb-over', val.length >= 64);
+    }
+
+    function setStylePicker(value) {
+        document.getElementById('btn-style').value = value || '';
+        document.querySelectorAll('.kb-style-swatch').forEach(el => {
+            const active = el.dataset.style === (value || '');
+            el.classList.toggle('ring-2', active);
+            el.classList.toggle('ring-admin-primary', active);
+            el.classList.toggle('ring-offset-1', active);
+            el.style.transform = active ? 'scale(1.04)' : '';
+        });
+    }
+
+    document.querySelectorAll('.kb-style-swatch').forEach(el => {
+        el.addEventListener('click', () => setStylePicker(el.dataset.style));
+    });
+
+    function editButton(uid) {
+        const btn = allButtons[uid];
+        if (!btn) return;
+        currentEditUid = uid;
+
+        document.getElementById('btn-text').value = btn.text;
+        updateBtnTextCounter();
+        setStylePicker(btn.data?.style || '');
+        document.getElementById('btn-web-app').value = btn.data?.web_app || '';
+
+        const isInline = keyboardData.keyboard_type === 'INLINE';
+        document.getElementById('inline-fields').classList.toggle('hidden', !isInline);
+        document.getElementById('reply-fields').classList.toggle('hidden', isInline);
+
+        if (isInline) {
+            document.getElementById('btn-url').value = btn.data?.url || '';
+            document.getElementById('btn-callback').value = btn.data?.callback_data || '';
+            document.getElementById('btn-copy-text').value = btn.data?.copy_text || '';
+            document.getElementById('btn-login-url').value = btn.data?.login_url || '';
+        } else {
+            document.getElementById('btn-request-contact').checked = btn.data?.request_contact || false;
+            document.getElementById('btn-request-location').checked = btn.data?.request_location || false;
+        }
+
+        openModal();
+    }
+
+    function openModal() {
+        const modal = document.getElementById('button-modal');
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => modal.classList.add('kb-modal-open'));
+    }
+
+    function saveButton() {
+        if (currentEditUid == null) return;
+        const btn = allButtons[currentEditUid];
+        btn.text = document.getElementById('btn-text').value.trim();
+
+        if (!btn.text) {
+            showErrorModal('متن دکمه نمی‌تواند خالی باشد.');
+            return;
+        }
+
+        const isInline = keyboardData.keyboard_type === 'INLINE';
+        btn.data = { text: btn.text.trim() };
+
+        if (document.getElementById('btn-style').value) {
+            btn.data.style = document.getElementById('btn-style').value.trim();
+        }
+
+        if (document.getElementById('btn-web-app').value) {
+            btn.data.web_app = document.getElementById('btn-web-app').value.trim();
+        }
+
+        if (isInline) {
+            if (document.getElementById('btn-url').value) {
+                btn.data.url = document.getElementById('btn-url').value.trim();
+            }
+            if (document.getElementById('btn-callback').value) {
+                btn.data.callback_data = document.getElementById('btn-callback').value.trim();
+            }
+            if (document.getElementById('btn-copy-text').value) {
+                btn.data.copy_text = document.getElementById('btn-copy-text').value.trim();
+            }
+            if (document.getElementById('btn-login-url').value) {
+                btn.data.login_url = document.getElementById('btn-login-url').value.trim();
+            }
+
+            if (btn.data.callback_data && btn.data.url) {
+                showErrorModal(`
+                    دکمه نمی‌تواند همزمان <strong>URL</strong> و <strong>Callback Data</strong> داشته باشد.
+                    <br><br>
+                    لطفاً فقط یکی از آن‌ها را پر کنید.
+                `);
+                return;
+            }
+
+            if (btn.data.copy_text) {
+                if (btn.data.callback_data || btn.data.url || btn.data.web_app || btn.data.login_url) {
+                    showErrorModal(`
+                        دکمه <strong>Copy Text</strong> نمی‌تواند با فیلدهای دیگر ترکیب شود.
+                        <br><br>
+                        لطفاً سایر فیلدها را خالی کنید.
+                    `);
+                    return;
+                }
+            }
+            else if (!btn.data.callback_data && !btn.data.url && !btn.data.web_app && !btn.data.login_url) {
+                showErrorModal(`
+                    دکمه اینلاین باید حداقل یکی از موارد زیر را داشته باشد:
+                    <br><br>
+                    • Callback Data<br>
+                    • URL<br>
+                    • Web App<br>
+                    • Copy Text<br>
+                    • Login Url
+                `);
+                return;
+            }
+        } else {
+            if (document.getElementById('btn-request-contact').checked) {
+                btn.data.request_contact = true;
+            }
+            if (document.getElementById('btn-request-location').checked) {
+                btn.data.request_location = true;
+            }
+        }
+
+        closeModal();
+        renderRows();
+        updatePreview();
+        showToast('دکمه ذخیره شد', 'fa-check');
+    }
+
+    function closeModal() {
+        currentEditUid = null;
+        const modal = document.getElementById('button-modal');
+        modal.classList.remove('kb-modal-open');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('error-modal')?.remove();
+        const modalHTML = `
+            <div id="error-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center">
+                <div class="bg-admin-bg border border-red-500 rounded-2xl max-w-md w-full mx-4 shadow-2xl" dir="rtl">
+                    <div class="px-6 py-4 border-b border-red-500/30 flex items-center gap-3">
+                        <i class="fa-solid fa-circle-exclamation text-red-500 text-2xl"></i>
+                        <h3 class="text-lg font-semibold text-red-500">خطا</h3>
+                    </div>
+                    <div class="px-6 py-8 text-admin-fg leading-relaxed text-[15.2px] text-right" dir="rtl">
+                        ${message}
+                    </div>
+                    <div class="px-6 py-4 border-t border-admin-border flex justify-end">
+                        <button onclick="this.closest('#error-modal').remove()" 
+                                class="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all active:scale-95">
+                            متوجه شدم
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    function updatePreview() {
+        const container = document.getElementById('preview-keyboard');
+        container.innerHTML = '';
+        const isInline = keyboardData.keyboard_type === 'INLINE';
+
+        const bubbleWrap = document.getElementById('preview-bubble-wrap');
+        const messageText = document.getElementById('message_text').value || 'متن پیامی که کاربر می‌بیند اینجا نمایش داده می‌شود...';
+        bubbleWrap.innerHTML = `<div class="kb-phone-bubble mb-2">${escapeHtml(messageText)}</div>`;
+
+        keyboardData.rows.forEach(row => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = "flex gap-2 mb-2";
+
+            row.buttonUids.forEach(uid => {
+                const btn = allButtons[uid];
+                if (!btn) return;
+
+                const bEl = document.createElement('button');
+                bEl.type = 'button';
+
+                let iconHtml = '';
+                if (isInline) {
+                    if (btn.data?.url) iconHtml = '<i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1.5"></i>';
+                } else {
+                    if (btn.data?.request_contact) iconHtml = '<i class="fa-solid fa-phone text-[10px] ml-1.5"></i>';
+                    else if (btn.data?.request_location) iconHtml = '<i class="fa-solid fa-location-dot text-[10px] ml-1.5"></i>';
+                }
+                bEl.innerHTML = `${iconHtml}<span>${escapeHtml(btn.text)}</span>`;
+
+                let baseClass = isInline
+                    ? "kb-preview-btn flex-1 py-3 px-4 text-sm rounded-2xl text-white flex items-center justify-center"
+                    : "kb-preview-btn flex-1 py-3 px-4 text-sm rounded-1xl text-white flex items-center justify-center";
+
+
+                const style = btn.data?.style || '';
+                let bgClass = '';
+
+                if (style === 'primary') bgClass = 'bg-blue-700';
+                else if (style === 'success') bgClass = 'bg-green-700';
+                else if (style === 'danger') bgClass = 'bg-red-700';
+                else bgClass = 'bg-slate-700';
+
+                bEl.className = `${baseClass} ${bgClass}`;
+                rowDiv.appendChild(bEl);
+            });
+
+            container.appendChild(rowDiv);
+        });
+    }
+
+    function flattenButtonsForSubmit() {
+        const flat = [];
+        keyboardData.rows.forEach((row, rIdx) => {
+            const ltrOrder = [...row.buttonUids].reverse();
+            ltrOrder.forEach((uid, pIdx) => {
+                const b = allButtons[uid];
+                flat.push({
+                    text: b.text,
+                    row: rIdx + 1,
+                    column: pIdx + 1,
+                    data: b.data || {}
+                });
+            });
+        });
+        return flat;
+    }
+
+    document.getElementById('message_text').addEventListener('input', function () {
+        const el = document.getElementById('message-char-count');
+        el.textContent = this.value.length;
+        updatePreview();
+    });
+
+    document.getElementById('btn-text').addEventListener('input', updateBtnTextCounter);
+
+    const form = document.getElementById('keyboard-form');
+    form.addEventListener('submit', function () {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'keyboard_data';
+        hidden.value = JSON.stringify({
+            keyboard_type: keyboardData.keyboard_type,
+            resize_keyboard: document.getElementById('resize_keyboard').checked,
+            one_time_keyboard: document.getElementById('one_time_keyboard').checked,
+            buttons: flattenButtonsForSubmit()
+        });
+        form.appendChild(hidden);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if original and original.keyboard %}
+            document.getElementById('resize_keyboard').checked = {{ original.keyboard.resize_keyboard|yesno:"true,false" }};
+            document.getElementById('one_time_keyboard').checked = {{ original.keyboard.one_time_keyboard|yesno:"true,false" }};
+        {% endif %}
+        setKeyboardType(keyboardData.keyboard_type || 'REPLY');
+        renderRows();
+        updatePreview();
+        document.getElementById('message-char-count').textContent = document.getElementById('message_text').value.length;
+    });
+
+</script>
+{% endblock %}

@@ -1851,6 +1851,27 @@ class InlineQueryResultCachedAudio(_BaseModel):
     input_message_content: InputMessageContent | None = None
 
 
+class InlineButtonOverride(_BaseModel):
+    row: int = 0
+    column: int = 0
+    icon_custom_emoji_id: str | None = None
+    switch_inline_query: str | None = None
+    switch_inline_query_current_chat: str | None = None
+    switch_inline_query_chosen_chat: SwitchInlineQueryChosenChat | None = None
+    callback_game: CallbackGame | None = None
+    pay: bool | None = None
+
+
+class ReplyButtonOverride(_BaseModel):
+    row: int = 0
+    column: int = 0
+    icon_custom_emoji_id: str | None = None
+    request_poll: KeyboardButtonPollType | None = None
+    request_users: KeyboardButtonRequestUsers | None = None
+    request_chat: KeyboardButtonRequestChat | None = None
+    request_managed_bot: KeyboardButtonRequestManagedBot | None = None
+
+
 class AnswerInlineQuery(_BaseModel):
     inline_query_id: str
     results: list[InlineQueryResult]
