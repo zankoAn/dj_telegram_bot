@@ -4,6 +4,7 @@ from typing import Any, Dict, List, cast
 
 import requests
 
+from apps.telegram.exceptions import TelegramAPIError
 from apps.telegram.telegram_models import (
     AcceptedGiftTypes,
     BotAccessSettings,
@@ -159,17 +160,18 @@ class Telegram:
 
             json_data = response.json()
 
-            if not json_data.get("ok", False):
-                logger.log_error(
-                    f"Telegram API error | Method: {method_name} | Response: {json_data}",
-                )
-                return {"ok": False, "error": True}
-
-            return json_data["result"]
-
         except Exception as e:
-            logger.log_error(f"[Erro -> {method_name}]{response.json()}")
+            logger.error(f"[Erro -> {method_name}]{response.json()}")
             return {"ok": False, "error": str(e)}
+
+        if not json_data.get("ok", False):
+            raise TelegramAPIError(
+                method_name,
+                json_data.get("error_code"),
+                json_data.get("description", "Unknown error"),
+            )
+
+        return json_data["result"]
 
     def _clean_dict(self, data: Dict[str, Any] | None) -> Dict[str, Any] | None:
         """Remove None values and convert nested dicts to JSON strings."""
