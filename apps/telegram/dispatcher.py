@@ -1,9 +1,9 @@
 from apps.telegram.handlers import (
     CallBackQueryHandler,
     CommandHandler,
+    InlineQueryHandler,
     MessageHandler,
 )
-from apps.telegram.handlers.inline_query import InlineQueryHandler
 from apps.telegram.telegram import Telegram
 from apps.telegram.telegram_models import Update
 
@@ -34,14 +34,14 @@ class Dispatcher:
         self.bot = bot
 
     def dispatch(self):
+        if self.update.inline_query:
+            return InlineQueryHandler(update=self.update, bot=self.bot).handle()
+
+        if self.update.callback_query:
+            return CallBackQueryHandler(update=self.update, bot=self.bot).handle()
+
         if self.update.message:
             if self.update.message.text and self.update.message.text.startswith("/"):
                 return CommandHandler(update=self.update, bot=self.bot).handle()
-
-        elif self.update.callback_query:
-            return CallBackQueryHandler(update=self.update, bot=self.bot).handle()
-
-        elif self.update.inline_query:
-            return InlineQueryHandler(update=self.update, bot=self.bot).handle()
 
         return MessageHandler(update=self.update, bot=self.bot).handle()

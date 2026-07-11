@@ -4978,10 +4978,3 @@ class Telegram:
         }
         response = self._make_request("getGameHighScores", method="GET", params=payload)
         return [GameHighScore.model_validate(game) for game in response]
-
-    def is_join_channel(self, chat_id, user_id, **kwargs):
-        if chat_id.isnumeric():
-            chat_id = chat_id if "@" in chat_id else "@" + str(chat_id)
-
-        rsp = self.get_chat_member(chat_id, user_id)
-        return rsp.status != "left"
