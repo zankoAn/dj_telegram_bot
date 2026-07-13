@@ -180,7 +180,11 @@ class BaseHandler:
 
     def is_join_channel(self, chat_id, user_id):
         chat_id = str(chat_id)
-        chat_id = chat_id if "@" in chat_id else "@" + chat_id
+        if chat_id.lstrip("-").isdigit():
+            chat_id = int(chat_id)
+        else:
+            chat_id = chat_id if "@" in chat_id else "@" + chat_id
+
         rsp = self.bot.get_chat_member(chat_id, user_id)
         return rsp.status != "left"
 
