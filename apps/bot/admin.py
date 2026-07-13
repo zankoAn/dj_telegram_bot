@@ -19,7 +19,7 @@ class BotUpdateStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChannelSponsor)
 class ChannelSponsorAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "chat_id", "is_active", "is_active")
+    list_display = ("id", "name", "chat_id", "is_active")
     search_fields = ("name",)
     list_editable = ("is_active",)
     list_display_links = ("id", "name")
