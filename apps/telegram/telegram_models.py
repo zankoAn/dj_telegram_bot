@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Annotated, List, Literal
+
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -77,7 +79,7 @@ class Chat(_BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     is_forum: bool | None = None
-    is_direct_messages: str | None = None
+    is_direct_messages: bool | None = None
 
 
 class ChatFullInfo(_BaseModel):
