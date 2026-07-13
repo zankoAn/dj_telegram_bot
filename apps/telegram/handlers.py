@@ -199,7 +199,6 @@ class BaseHandler:
 
 
 class CallBackQueryHandler(BaseHandler):
-    callback_handlers: Dict[str, str] = {}
     step_handlers: Dict[str, Callable] = {}
 
     def __init__(self, update: Update, bot: Telegram):
@@ -216,7 +215,6 @@ class CallBackQueryHandler(BaseHandler):
 
 
 class InlineQueryHandler(BaseHandler):
-    callback_handlers: Dict[str, str] = {}
     step_handlers: Dict[str, Callable] = {}
 
     def __init__(self, update: Update, bot: Telegram):
@@ -224,7 +222,6 @@ class InlineQueryHandler(BaseHandler):
 
 
 class CommandHandler(BaseHandler):
-    callback_handlers: Dict[str, str] = {}
     step_handlers: Dict[str, Callable] = {}
 
     def __init__(self, update: Update, bot: Telegram):
@@ -241,7 +238,6 @@ class CommandHandler(BaseHandler):
 
 
 class MessageHandler(BaseHandler):
-    callback_handlers: Dict[str, str] = {}
     step_handlers: Dict[str, Callable] = {}
 
     def __init__(self, update: Update, bot: Telegram):
