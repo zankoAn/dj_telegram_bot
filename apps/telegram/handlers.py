@@ -23,7 +23,12 @@ class BaseHandler:
     such as accessing user, chat, and message details.
     """
 
-    step_handlers: dict[str, Callable] = {}
+    _handlers: dict[str, Callable] = {}
+    ALL_KEY = "__all__"
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._handlers = {}
 
     def __init__(self, update: Update, bot: Telegram):
         """
@@ -124,13 +129,21 @@ class BaseHandler:
         return self.user_obj.step if self.user_obj else ""
 
     @classmethod
-    def add_handler(cls, func: Callable, step):
-        cls.step_handlers[step] = func
+    def add_handler(cls, func: Callable, key):
+        if key:
+            key = key.replace(" ", "_")
+        else:
+            key = cls.ALL_KEY
+
+        if key in cls._handlers:
+            print(f"Warning: Handler for '{key}' is being overridden!")
+
+        cls._handlers[key] = func
 
     @classmethod
-    def register(cls, step):
+    def register(cls, key: str | None = None):
         def decorator(func):
-            cls.add_handler(func, step)
+            cls.add_handler(func, key)
             return func
 
         return decorator
@@ -190,64 +203,43 @@ class BaseHandler:
 
     def handle(self):
         if self.is_update_mode() or self.is_user_block():
-            return False
+            return True
 
-        if handler := self.step_handlers.get(self.user_step):
-            return handler(self)
-
-        return False
+    def dispatch(self, *keys: str):
+        for key in (*keys, self.user_step, self.ALL_KEY):
+            key = key.replace(" ", "_")
+            handler = self._handlers.get(key)
+            if handler:
+                return handler(self)
 
 
 class CallBackQueryHandler(BaseHandler):
-    step_handlers: Dict[str, Callable] = {}
-
-    def __init__(self, update: Update, bot: Telegram):
-        super().__init__(update, bot)
-
     def handle(self):
-        super().handle()
+        if super().handle():
+            return
 
-        handler = self.step_handlers.get(self.callback_data)
-        if handler:
-            return handler(self)
-
-        return False
+        return self.dispatch(self.callback_data)
 
 
 class InlineQueryHandler(BaseHandler):
-    step_handlers: Dict[str, Callable] = {}
+    def handle(self):
+        if super().handle():
+            return True
 
-    def __init__(self, update: Update, bot: Telegram):
-        super().__init__(update, bot)
+        return self.dispatch()
 
 
 class CommandHandler(BaseHandler):
-    step_handlers: Dict[str, Callable] = {}
-
-    def __init__(self, update: Update, bot: Telegram):
-        super().__init__(update, bot)
-
     def handle(self):
-        super().handle()
+        if super().handle():
+            return
 
-        handler = self.step_handlers.get(self.command)
-        if handler:
-            return handler(self)
-
-        return False
+        return self.dispatch(self.command)
 
 
 class MessageHandler(BaseHandler):
-    step_handlers: Dict[str, Callable] = {}
-
-    def __init__(self, update: Update, bot: Telegram):
-        super().__init__(update, bot)
-
     def handle(self):
-        super().handle()
+        if super().handle():
+            return
 
-        handler = self.step_handlers.get(self.text)
-        if handler:
-            return handler(self)
-
-        return False
+        return self.dispatch(self.text)
