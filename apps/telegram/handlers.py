@@ -191,7 +191,7 @@ class BaseHandler:
         thread.start()
         return thread
 
-    def is_join_channel(self, chat_id, user_id):
+    def has_joined_channel(self, chat_id, user_id):
         chat_id = str(chat_id)
         if chat_id.lstrip("-").isdigit():
             chat_id = int(chat_id)

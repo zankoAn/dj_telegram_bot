@@ -32,7 +32,7 @@ class ChannelSponsorService:
     default_msg = "برای استفاده از ربات لطفا در کانالهای زیر عضو شوید"
 
     @staticmethod
-    def get_channels():
+    def get_active_channels():
         return ChannelSponsor.objects.filter(is_active=True)
 
     @staticmethod

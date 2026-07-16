@@ -1,73 +1,59 @@
-import json
 from functools import wraps
 
 from django.core.cache import cache
 
-from apps.bot.models import ChannelSponsor
-from apps.telegram.handlers.base_handlers import BaseHandler
-from utils.load_env import env
+from apps.telegram.handlers import BaseHandler
+from apps.telegram.services import ChannelSponsorService, MessageService
+from apps.telegram.telegram_models import InlineKeyboardButton, InlineKeyboardMarkup
 
-
-class SponsorCacheHandler:
-    @staticmethod
-    def set_cache(key: str, value, expire: int = 3600):
-        """
-        Store value in Django cache. Value will be serialized to JSON.
-        """
-        serialized = json.dumps(value)
-        cache.set(key, serialized, expire)
-
-    @staticmethod
-    def get_cache(key: str):
-        """
-        Get value from cache. If not exists, return None.
-        Automatically deserializes JSON.
-        """
-        data = cache.get(key)
-        return bool(data)
-
-
-def channel_sponsor(self: BaseHandler):
-
-    sponsor_cache = SponsorCacheHandler()
-    cache_key = f"{env.BOT_USERNAME}:sponsor:{self.user_id}"
-    cached = sponsor_cache.get_cache(cache_key)
-    if cached:
-        return True
-
-    channels = ChannelSponsor.objects.all()
-    try:
-        msg = self.bot_messages.get_message("sponsor_channels_message")
-    except Exception:
-        msg = "please join in the sponsor channel"
-    if channels:
-        not_join_channel_chat_id = []
-        for channel in channels:
-            if channel.other:
-                continue
-            if self.bot.is_join_channel(channel.chat_id, self.user_id):
-                continue
-            else:
-                not_join_channel_chat_id.append(channel.chat_id)
-
-        if not_join_channel_chat_id:
-            channels = channels.filter(chat_id__in=not_join_channel_chat_id)
-            self.bot.send_message(
-                chat_id=self.user_id,
-                text=msg,
-                parse_mode="html",
-                reply_markup=self.inline_keyboard.sponsor_channel_keyboard(channels),
-            )
-            return False
-    sponsor_cache.set_cache(cache_key, True, expire=60)
-    return True
+SPONSOR_CACHE_KEY = "sponsor_joined:{}:{}"
+SPONSOR_CACHE_TTL = 60  # 1m
+DEFAULT_SUBMIT_TEXT = "تایید عضویت ✅"
 
 
 def sponsor_required(func):
     @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if not channel_sponsor(self):
-            return
+    def wrapper(self: BaseHandler, *args, **kwargs):
+        sponsor_channels = ChannelSponsorService.get_active_channels()
+        if not sponsor_channels:
+            return True
+
+        not_joined = []
+        for channel in sponsor_channels:
+            cache_key = SPONSOR_CACHE_KEY.format(self.user_id, channel.chat_id)
+            if cache.get(cache_key):
+                continue
+
+            if self.has_joined_channel(channel.chat_id, self.user_id):
+                cache.set(cache_key, True, SPONSOR_CACHE_TTL)
+                continue
+
+            not_joined.append(channel)
+
+        if not_joined:
+            msg = MessageService.get_msg_by_step("sponsor_required")
+            markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=ch.name, url=ch.link)]
+                    for ch in not_joined
+                ]
+            )
+            markup.inline_keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        text=DEFAULT_SUBMIT_TEXT,
+                        callback_data="sponsor_required",
+                        style="success",
+                    )
+                ]
+            )
+            self.bot.send_message(
+                chat_id=self.chat_id,
+                text=msg.text if msg else ChannelSponsorService.default_msg,
+                reply_markup=markup,
+            )
+            return False
+
         return func(self, *args, **kwargs)
 
     return wrapper
