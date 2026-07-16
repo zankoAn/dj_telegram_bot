@@ -2,23 +2,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.bot.mixins import TelegramUserMixin
 
-class User(AbstractUser):
 
-    user_id = models.BigIntegerField(
-        unique=True,
-        verbose_name=_("user id")
-    )
-
-    step = models.CharField(
-        max_length=30,
-        default="home",
-        verbose_name=_("current step")
-    )
-
+class User(AbstractUser, TelegramUserMixin):
     is_send_ads = models.BooleanField(
-        default=False,
-        verbose_name=_("Advertising status")
+        default=False, verbose_name=_("Advertising status")
     )
 
     USERNAME_FIELD = "username"
