@@ -27,8 +27,6 @@ class ChannelSponsor(models.Model):
         if self.chat_id and not f"{self.chat_id}".startswith(self.PREFIX):
             self.chat_id = f"{self.PREFIX}{self.chat_id}"
 
-        print(self.chat_id)
-
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
