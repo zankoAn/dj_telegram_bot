@@ -89,6 +89,7 @@ class Telegram:
     """
 
     HEADERS: Dict[str, str] = {"Cache-Control": "no-cache"}
+    UNKNOWN_ERROR = 0
     _instance = None
     _initialized = False
 
@@ -162,13 +163,8 @@ class Telegram:
 
             json_data = response.json()
 
-        except Exception as e:
-            error = e
-            if isinstance(response, requests.Response):
-                error = response.json()
-
-            logger.error(f"[Erro -> {method_name}]{error}")
-            return {"ok": False}
+        except Exception as error:
+            raise TelegramAPIError(method_name, self.UNKNOWN_ERROR, str(error))
 
         if not json_data.get("ok", False):
             raise TelegramAPIError(
