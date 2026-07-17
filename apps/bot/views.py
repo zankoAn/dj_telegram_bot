@@ -1,3 +1,4 @@
+import logging
 import traceback
 
 from rest_framework import status
@@ -8,7 +9,8 @@ from rest_framework.views import APIView
 from apps.telegram.dispatcher import Dispatcher
 from apps.telegram.telegram import Telegram
 from apps.telegram.telegram_models import Update
-from utils.logger import logger
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramWebhookView(APIView):
@@ -45,6 +47,6 @@ class TelegramWebhookView(APIView):
 
         except Exception:
             error_msg = traceback.format_exc().strip()
-            logger.error("Exception while processing Telegram update:\n%s", error_msg)
+            logger.error(f"Exception while processing Telegram update:\n{error_msg}")
 
         return Response({"ok": True}, status=status.HTTP_200_OK)

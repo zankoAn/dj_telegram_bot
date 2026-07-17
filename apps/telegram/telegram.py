@@ -1,4 +1,5 @@
 import json
+import logging
 from io import BufferedReader
 from typing import Any, Dict, List, cast
 
@@ -77,7 +78,8 @@ from apps.telegram.telegram_models import (
     UserProfilePhotos,
 )
 from utils.load_env import env
-from utils.logger import logger
+
+logger = logging.getLogger(__name__)
 
 
 class Telegram:
