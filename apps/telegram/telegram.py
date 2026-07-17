@@ -140,9 +140,9 @@ class Telegram:
         Send HTTP request to Telegram Bot API.
         """
         url = f"{self.webhook}/bot{self.token}/{method_name}"
-        response = json.loads("{}")
         params = self._clean_dict(params)
         data = self._clean_dict(data)
+        response = None
         try:
             if method.upper() == "GET":
                 response = self._session.get(
@@ -161,8 +161,12 @@ class Telegram:
             json_data = response.json()
 
         except Exception as e:
-            logger.error(f"[Erro -> {method_name}]{response.json()}")
-            return {"ok": False, "error": str(e)}
+            error = e
+            if isinstance(response, requests.Response):
+                error = response.json()
+
+            logger.error(f"[Erro -> {method_name}]{error}")
+            return {"ok": False}
 
         if not json_data.get("ok", False):
             raise TelegramAPIError(
