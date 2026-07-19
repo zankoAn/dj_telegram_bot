@@ -5,8 +5,8 @@ from typing import Any, Dict, List, cast
 
 import requests
 
-from apps.telegram.exceptions import TelegramAPIError
-from apps.telegram.telegram_models import (
+from django_telegram_bot.core.exceptions import TelegramAPIError
+from django_telegram_bot.core.types import (
     AcceptedGiftTypes,
     BotAccessSettings,
     BotCommand,
@@ -77,52 +77,38 @@ from apps.telegram.telegram_models import (
     UserProfileAudios,
     UserProfilePhotos,
 )
-from utils.load_env import env
 
 logger = logging.getLogger(__name__)
 
 
 class Telegram:
     """
-    A fully typed and proxy-ready client for the Telegram Bot API (v9.2).
-    Designed for clean, maintainable, and production-grade bot development.
+    A typed, production-ready client for the Telegram Bot API,
+    built around clean architecture and maintainability.
     """
 
     HEADERS: Dict[str, str] = {"Cache-Control": "no-cache"}
     UNKNOWN_ERROR = 0
-    _instance = None
-    _initialized = False
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
+    def __init__(self, token: str, webhook_url: str, proxy_socks: str | None = None):
+        self._validate_config(token, webhook_url)
+        self.token = token
+        self.webhook = webhook_url
 
-        return cls._instance
-
-    def __init__(self):
-        if self._initialized:
-            return
-
-        self._validate_config()
-        self.token = env.get("TOKEN")
-        self.webhook = env.get("TM_WEBHOOK_URL")
-
-        self.proxy = self._setup_proxy()
+        self.proxy = self._setup_proxy(proxy_socks)
         self._session = requests.Session()
         self._session.headers.update(self.HEADERS)
-        self._initialized = True
 
-    def _validate_config(self):
+    def _validate_config(self, token, webhook_url):
         """Ensure all required environment variables are present."""
-        if not env.get("TOKEN"):
-            raise ValueError("TOKEN is required in environment variables.")
+        if not token:
+            raise ValueError("BOT_TOKEN is required.")
 
-        if not env.get("TM_WEBHOOK_URL"):
-            raise ValueError("TM_WEBHOOK_URL is required in environment variables.")
+        if not webhook_url:
+            raise ValueError("TM_WEBHOOK_URL is required.")
 
-    def _setup_proxy(self) -> Dict[str, str] | None:
+    def _setup_proxy(self, proxy_socks) -> Dict[str, str] | None:
         """Configure SOCKS5 proxy if provided."""
-        proxy_socks = env.get("PROXY_SOCKS")
         if proxy_socks:
             return {
                 "http": f"socks5h://{proxy_socks}",

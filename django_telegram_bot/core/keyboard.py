@@ -1,4 +1,4 @@
-from apps.telegram.telegram_models import (
+from django_telegram_bot.core.types import (
     CopyTextButton,
     InlineButtonOverride,
     InlineKeyboardButton,

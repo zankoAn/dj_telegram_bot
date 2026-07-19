@@ -1,6 +1,20 @@
+from functools import lru_cache
+
+from django.conf import settings
 from django.core.cache import cache
 
-from apps.bot.models import BotUpdateStatus, ChannelSponsor, Message
+from django_telegram_bot.contrib.models import BotUpdateStatus, ChannelSponsor, Message
+
+
+@lru_cache
+def get_tm_client():
+    from django_telegram_bot.core.telegram import Telegram
+
+    return Telegram(
+        token=settings.BOT_TOKEN,
+        webhook_url=settings.TM_WEBHOOK_URL,
+        proxy_socks=getattr(settings, "PROXY_SOCKS", None),
+    )
 
 
 class BotStatusService:

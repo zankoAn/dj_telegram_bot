@@ -1,13 +1,13 @@
-import threading
-from typing import Callable, Dict, cast
+import logging
+from typing import Callable, cast
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import make_password
 from django.utils.functional import cached_property
 
-from apps.account.models import User as UserDB
-from apps.telegram.services import BotStatusService, MessageService
-from apps.telegram.telegram import Telegram
-from apps.telegram.telegram_models import (
+from django_telegram_bot.contrib.services import BotStatusService, MessageService
+from django_telegram_bot.core.telegram import Telegram
+from django_telegram_bot.core.types import (
     CallbackQuery,
     Chat,
     InlineQuery,
@@ -15,6 +15,10 @@ from apps.telegram.telegram_models import (
     Update,
     User,
 )
+
+logger = logging.getLogger(__name__)
+
+UserDB = get_user_model()
 
 
 class BaseHandler:
@@ -136,7 +140,7 @@ class BaseHandler:
             key = cls.ALL_KEY
 
         if key in cls._handlers:
-            print(f"Warning: Handler for '{key}' is being overridden!")
+            logger.warning(f"Handler for '{key}' is being overridden!")
 
         cls._handlers[key] = func
 
@@ -182,14 +186,6 @@ class BaseHandler:
             return True
 
         return False
-
-    def run_function_in_thread(self, func, *args, **kwargs):
-        """
-        Run the given function in a separate thread.
-        """
-        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-        thread.start()
-        return thread
 
     def has_joined_channel(self, chat_id, user_id):
         chat_id = str(chat_id)

@@ -6,9 +6,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.telegram.dispatcher import Dispatcher
-from apps.telegram.telegram import Telegram
-from apps.telegram.telegram_models import Update
+from django_telegram_bot.contrib.services import get_tm_client
+from django_telegram_bot.core.dispatcher import Dispatcher
+from django_telegram_bot.core.types import Update
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class TelegramWebhookView(APIView):
         """
         try:
             update = Update.model_validate(request.data)
-            bot = Telegram()
+            bot = get_tm_client()
             logger.info(
                 f"Received Telegram update: {update.model_dump(exclude_none=True)}"
             )

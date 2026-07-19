@@ -1,11 +1,11 @@
-from apps.telegram.handlers import (
+from django_telegram_bot.core.handlers import (
     CallBackQueryHandler,
     CommandHandler,
     InlineQueryHandler,
     MessageHandler,
 )
-from apps.telegram.telegram import Telegram
-from apps.telegram.telegram_models import Update
+from django_telegram_bot.core.telegram import Telegram
+from django_telegram_bot.core.types import Update
 
 
 class Dispatcher:
