@@ -212,7 +212,7 @@ class Message(_BaseModel):
     message_auto_delete_timer_changed: MessageAutoDeleteTimerChanged | None = None
     migrate_to_chat_id: int | None = None
     migrate_from_chat_id: int | None = None
-    pinned_message: Message | None = None
+    pinned_message: MaybeInaccessibleMessage | None = None
     invoice: Invoice | None = None
     successful_payment: SuccessfulPayment | None = None
     refunded_payment: RefundedPayment | None = None
@@ -259,6 +259,11 @@ class Message(_BaseModel):
     @property
     def id(self) -> int:
         return self.message_id
+
+    @property
+    def new_chat_member(self) -> User | None:
+        if self.new_chat_members:
+            return self.new_chat_members[0]
 
     @staticmethod
     def convert_unicode(text: str) -> str:
