@@ -1,14 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "base-telegram"
+name = "django-tg-bot"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "django>=5.2.1",
-    "django-redis>=6.0.0",
-    "djangorestframework>=3.16.0",
-    "pydantic>=2.11.4",
-    "pysocks>=1.7.1",
-    "requests>=2.32.3",
+description = "A Django app for building Telegram bots"
+authors = [
+  { name = "zankoAN", email = "zankoAn4@gmail.com" }
 ]
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "MIT" }
+requires-python = ">=3.12"
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 6.0",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "django>=6.0",
+    "pydantic>=2.13.4",
+    "requests>=2.34.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-stubs>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/zankoAn/django-tg-bot"
+Repository = "https://github.com/zankoAn/django-tg-bot"
+
+[tool.hatch.build.targets.wheel]
+packages = ["django_tg_bot"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 60
