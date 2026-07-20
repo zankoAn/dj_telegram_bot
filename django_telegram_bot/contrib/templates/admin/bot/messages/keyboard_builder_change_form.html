@@ -297,7 +297,7 @@
         <input type="submit" value="ذخیره و ادامه ویرایش" name="_continue"
             class="px-6 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 font-semibold rounded-lg shadow-sm transition-all active:scale-95 cursor-pointer">
         {% if original %}
-            <a href="{% url 'admin:bot_message_delete' original.pk %}"
+            <a href="{% url 'admin:contrib_message_delete' original.pk %}"
                 class="px-6 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-lg transition-all border border-red-200 hover:border-red-300 active:scale-95">
                 حذف آیتم
             </a>
