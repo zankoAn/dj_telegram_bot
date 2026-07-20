@@ -2,9 +2,9 @@ from functools import wraps
 
 from django.core.cache import cache
 
-from django_telegram_bot.core.handlers import BaseHandler
-from django_telegram_bot.contrib.services import ChannelSponsorService, MessageService
-from django_telegram_bot.core.types import InlineKeyboardButton, InlineKeyboardMarkup
+from django_tg_bot.core.handlers import BaseHandler
+from django_tg_bot.contrib.services import ChannelSponsorService, MessageService
+from django_tg_bot.core.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 SPONSOR_CACHE_KEY = "sponsor_joined:{}:{}"
 SPONSOR_CACHE_TTL = 60  # 1m

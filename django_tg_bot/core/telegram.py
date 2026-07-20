@@ -5,8 +5,8 @@ from typing import Any, Dict, List, cast
 
 import requests
 
-from django_telegram_bot.core.exceptions import TelegramAPIError
-from django_telegram_bot.core.types import (
+from django_tg_bot.core.exceptions import TelegramAPIError
+from django_tg_bot.core.types import (
     AcceptedGiftTypes,
     BotAccessSettings,
     BotCommand,

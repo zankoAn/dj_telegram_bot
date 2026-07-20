@@ -1,6 +1,6 @@
 from django.urls import path
 
-from django_telegram_bot.contrib.views import TelegramWebhookView
+from django_tg_bot.contrib.views import TelegramWebhookView
 
 app_name = "bot"
 urlpatterns = [

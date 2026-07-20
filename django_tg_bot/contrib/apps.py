@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class ContribConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "django_telegram_bot.contrib"
+    name = "django_tg_bot.contrib"
 
     def ready(self):
         self._validate_user_model()
@@ -46,17 +46,17 @@ class ContribConfig(AppConfig):
         from django.contrib.auth import get_user_model
         from django.core.exceptions import ImproperlyConfigured
 
-        from django_telegram_bot.contrib.mixins import TelegramUserMixin
+        from django_tg_bot.contrib.mixins import TelegramUserMixin
 
         User = get_user_model()
 
         if not issubclass(User, TelegramUserMixin):
             raise ImproperlyConfigured(
-                "django-telegram-bot requires your custom AUTH_USER_MODEL to inherit "
+                "django-tg-bot requires your custom AUTH_USER_MODEL to inherit "
                 "from `TelegramUserMixin`.\n\n"
                 "Example:\n"
                 "    from django.contrib.auth.models import AbstractUser\n"
-                "    from django_telegram_bot.contrib.mixins import TelegramUserMixin\n\n"
+                "    from django_tg_bot.contrib.mixins import TelegramUserMixin\n\n"
                 "    class User(AbstractUser, TelegramUserMixin):\n"
                 "        pass\n\n"
                 "Then in settings.py:\n"

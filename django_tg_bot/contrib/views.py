@@ -7,9 +7,9 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from django_telegram_bot.contrib.services import get_tm_client
-from django_telegram_bot.core.dispatcher import Dispatcher
-from django_telegram_bot.core.types import Update
+from django_tg_bot.contrib.services import get_tm_client
+from django_tg_bot.core.dispatcher import Dispatcher
+from django_tg_bot.core.types import Update
 
 logger = logging.getLogger(__name__)
 
