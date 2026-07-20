@@ -16,7 +16,7 @@ def sponsor_required(func):
     def wrapper(self: BaseHandler, *args, **kwargs):
         sponsor_channels = ChannelSponsorService.get_active_channels()
         if not sponsor_channels:
-            return True
+            return func(self, *args, **kwargs)
 
         not_joined = []
         for channel in sponsor_channels:
