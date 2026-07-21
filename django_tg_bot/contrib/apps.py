@@ -52,7 +52,7 @@ class ContribConfig(AppConfig):
 
         if not issubclass(User, TelegramUserMixin):
             raise ImproperlyConfigured(
-                "django-tg-bot requires your custom AUTH_USER_MODEL to inherit "
+                "dj_telegram_bot requires your custom AUTH_USER_MODEL to inherit "
                 "from `TelegramUserMixin`.\n\n"
                 "Example:\n"
                 "    from django.contrib.auth.models import AbstractUser\n"

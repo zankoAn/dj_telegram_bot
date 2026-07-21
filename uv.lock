@@ -214,7 +214,7 @@ wheels = [
 ]
 
 [[package]]
-name = "django-tg-bot"
+name = "dj_telegram_bot"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

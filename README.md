@@ -6,7 +6,7 @@ The fastest way to build a production-ready Telegram bot on Django.
 
 ## 🚀 Overview
 
-`django-tg-bot` gives you a clean, decorator-based way to handle Telegram updates (commands, messages, callbacks) inside any Django project.
+`dj_telegram_bot` gives you a clean, decorator-based way to handle Telegram updates (commands, messages, callbacks) inside any Django project.
 
 - Fully typed with Pydantic — every Telegram API type is modeled, giving you autocomplete and type safety everywhere
 - Dynamic messages and keyboards — create and edit them directly from a custom Django admin UI
@@ -19,13 +19,13 @@ The fastest way to build a production-ready Telegram bot on Django.
 ## ⚙️ Installation
 
 ```bash
-pip install django-tg-bot
+pip install dj_telegram_bot
 ```
 
 or with `uv`:
 
 ```bash
-uv add django-tg-bot
+uv add dj_telegram_bot
 ```
 
 ---
@@ -40,7 +40,7 @@ Here's the minimal setup to get a bot responding to `/start`.
 # settings.py
 INSTALLED_APPS = [
     ...
-    "django_tg_bot.contrib",
+    "dj_telegram_bot.contrib",
 ]
 
 BOT_TOKEN = "your-telegram-bot-token"
@@ -54,7 +54,7 @@ You must have a user model that inherits from `AbstractUser` and `TelegramUserMi
 ```python
 # your_app/models.py
 from django.contrib.auth.models import AbstractUser
-from django_tg_bot.contrib.mixins import TelegramUserMixin
+from dj_telegram_bot.contrib.mixins import TelegramUserMixin
 
 class User(AbstractUser, TelegramUserMixin):
     pass
@@ -75,7 +75,7 @@ from django.urls import path, include
 
 urlpatterns = [
     ...
-    path("telegram/", include("django_tg_bot.contrib.urls")),
+    path("telegram/", include("dj_telegram_bot.contrib.urls")),
 ]
 ```
 
@@ -109,7 +109,7 @@ your_app/
 
 ```python
 # your_app/bot_handlers/start.py
-from django_tg_bot.core.handlers import CommandHandler
+from dj_telegram_bot.core.handlers import CommandHandler
 
 class StartHandler(CommandHandler):
     @CommandHandler.register("start")
@@ -157,9 +157,9 @@ class YourAppConfig(AppConfig):
 Instead of hardcoding text and keyboards, define them in the Django admin (**Messages** section) and fetch them by step. First create a `Message` in the admin with a `step` value (e.g. `"home"`), then reference it in your handler:
 
 ```python
-from django_tg_bot.core.handlers import CommandHandler
-from django_tg_bot.core.keyboard import KeyboardBuilder
-from django_tg_bot.contrib.services import MessageService
+from dj_telegram_bot.core.handlers import CommandHandler
+from dj_telegram_bot.core.keyboard import KeyboardBuilder
+from dj_telegram_bot.contrib.services import MessageService
 
 class HomeHandler(CommandHandler):
     @CommandHandler.register("start")
@@ -179,8 +179,8 @@ Each `Message` can have an associated `Keyboard` (reply or inline), with fully c
 Use the `@sponsor_required` decorator to require users to join specific channels before a handler runs. Channels are configured via the **ChannelSponsor** model in the admin panel.
 
 ```python
-from django_tg_bot.core.handlers import CommandHandler
-from django_tg_bot.contrib.decorators import sponsor_required
+from dj_telegram_bot.core.handlers import CommandHandler
+from dj_telegram_bot.contrib.decorators import sponsor_required
 
 class GatedHandler(CommandHandler):
     @CommandHandler.register("start")
