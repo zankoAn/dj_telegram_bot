@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "django-tg-bot"
 version = "0.1.0"
-description = "A Django app for building Telegram bots"
+description = "The fastest way to build a production-ready Telegram bot on Django"
 authors = [
   { name = "zankoAN", email = "zankoAn4@gmail.com" }
 ]
@@ -29,6 +29,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "django-stubs>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "twine>=6.2.0",
 ]
 
 [project.urls]
