@@ -172,6 +172,38 @@ wheels = [
 ]
 
 [[package]]
+name = "dj-telegram-bot"
+version = "0.1.1"
+source = { editable = "." }
+dependencies = [
+    { name = "django" },
+    { name = "pydantic" },
+    { name = "requests" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "django-stubs" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "twine" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "django", specifier = ">=6.0" },
+    { name = "django-stubs", marker = "extra == 'dev'", specifier = ">=6.0" },
+    { name = "pydantic", specifier = ">=2.13.4" },
+    { name = "requests", specifier = ">=2.34.2" },
+]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "twine", specifier = ">=6.2.0" }]
+
+[[package]]
 name = "django"
 version = "6.0.7"
 source = { registry = "https://pypi.org/simple" }
@@ -212,38 +244,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/36/50/917f7224ea470e89c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/65/4d73fce956b5ebf26449259664360e539fbe95f0e86be396c28b636ba72a/django_stubs_ext-6.0.7-py3-none-any.whl", hash = "sha256:53a9c7c5a7c7e718cc6308cfce1e7470f2cac0b9d38dbcd60fbfa82704f1d592", size = 10362, upload-time = "2026-07-14T10:07:55.653Z" },
 ]
-
-[[package]]
-name = "dj_telegram_bot"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "django" },
-    { name = "pydantic" },
-    { name = "requests" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "django-stubs" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "twine" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "django", specifier = ">=6.0" },
-    { name = "django-stubs", marker = "extra == 'dev'", specifier = ">=6.0" },
-    { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "requests", specifier = ">=2.34.2" },
-]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "twine", specifier = ">=6.2.0" }]
 
 [[package]]
 name = "docutils"
