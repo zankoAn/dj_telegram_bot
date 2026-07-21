@@ -109,7 +109,7 @@ your_app/
 
 ```python
 # your_app/bot_handlers/start.py
-from django_tg_bot.core.decorators import CommandHandler
+from django_tg_bot.core.handlers import CommandHandler
 
 class StartHandler(CommandHandler):
     @CommandHandler.register("start")
@@ -157,7 +157,7 @@ class YourAppConfig(AppConfig):
 Instead of hardcoding text and keyboards, define them in the Django admin (**Messages** section) and fetch them by step. First create a `Message` in the admin with a `step` value (e.g. `"home"`), then reference it in your handler:
 
 ```python
-from django_tg_bot.core.decorators import CommandHandler
+from django_tg_bot.core.handlers import CommandHandler
 from django_tg_bot.core.keyboard import KeyboardBuilder
 from django_tg_bot.contrib.services import MessageService
 
@@ -179,6 +179,7 @@ Each `Message` can have an associated `Keyboard` (reply or inline), with fully c
 Use the `@sponsor_required` decorator to require users to join specific channels before a handler runs. Channels are configured via the **ChannelSponsor** model in the admin panel.
 
 ```python
+from django_tg_bot.core.handlers import CommandHandler
 from django_tg_bot.contrib.decorators import sponsor_required
 
 class GatedHandler(CommandHandler):
