@@ -6,9 +6,7 @@ The fastest way to build a production-ready Telegram bot on Django.
 
 ## 🎥 Demo
 
-
-<img width="800" height="400" alt="Image" src="https://github.com/user-attachments/assets/dd901113-2993-4c78-b6c6-3746c7a4ff57" />
-
+https://github.com/user-attachments/assets/5307e4c1-4f2a-4c2f-94e7-b05d9fec2788
 
 ---
 ## 🚀 Overview
