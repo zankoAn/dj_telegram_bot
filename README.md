@@ -4,6 +4,13 @@ The fastest way to build a production-ready Telegram bot on Django.
 
 ---
 
+## 🎥 Demo
+
+
+<img width="800" height="400" alt="Image" src="https://github.com/user-attachments/assets/dd901113-2993-4c78-b6c6-3746c7a4ff57" />
+
+
+---
 ## 🚀 Overview
 
 `dj_telegram_bot` gives you a clean, decorator-based way to handle Telegram updates (commands, messages, callbacks) inside any Django project.
