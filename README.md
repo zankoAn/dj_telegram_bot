@@ -1,5 +1,8 @@
 # Django Telegram Bot
 
+[![PyPI](https://img.shields.io/pypi/v/dj-telegram-bot)](https://pypi.org/project/dj-telegram-bot/)
+[![Latest on Django Packages](https://img.shields.io/badge/Django_Packages-dj--telegram--bot-8c3c26.svg)](https://djangopackages.org/packages/p/dj-telegram-bot/)
+
 The fastest way to build a production-ready Telegram bot on Django.
 
 ---
