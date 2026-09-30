@@ -199,8 +199,9 @@ class Telegram:
         payload,
         thumbnail=None,
         cover=None,
-        files={},
+        files=None,
     ):
+        files = {} if files is None else files
 
         if isinstance(file_obj, BufferedReader):
             files[field_name] = (
