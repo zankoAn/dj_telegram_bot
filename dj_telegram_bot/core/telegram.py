@@ -228,8 +228,8 @@ class Telegram:
 
         if cover:
             if isinstance(cover, (bytes, BufferedReader)):
-                thumb_name = getattr(cover, "name", "cover.jpg")
-                files["cover"] = (cover, cover)
+                cover_name = os.path.basename(getattr(cover, "name", "cover.jpg"))
+                files["cover"] = (cover_name, cover)
                 payload["cover"] = "attach://cover"
             else:
                 payload["cover"] = cover
