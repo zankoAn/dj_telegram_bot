@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dj_telegram_bot"
-version = "0.1.4"
+version = "0.1.7"
 description = "The fastest way to build a production-ready Telegram bot on Django"
 authors = [
   { name = "zankoAN", email = "zankoAn4@gmail.com" }
@@ -21,9 +21,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "build>=1.6.1",
     "django>=6.0",
     "pydantic>=2.13.4",
     "requests>=2.34.2",
+    "twine>=6.2.0",
 ]
 
 [project.optional-dependencies]
@@ -46,3 +48,14 @@ packages = ["dj_telegram_bot"]
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = 60
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  ".venv",
+  ".git",
+  "__pycache__",
+  ".pytest_cache",
+  "build",
+  "dist",
+  "assets",
+]
