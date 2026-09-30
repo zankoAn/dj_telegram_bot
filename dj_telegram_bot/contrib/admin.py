@@ -5,7 +5,7 @@ from django.contrib import admin, messages
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from django_tg_bot.contrib.models import (
+from dj_telegram_bot.contrib.models import (
     BotUpdateStatus,
     Button,
     ChannelSponsor,

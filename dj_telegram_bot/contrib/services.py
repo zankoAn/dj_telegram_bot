@@ -3,12 +3,12 @@ from functools import lru_cache
 from django.conf import settings
 from django.core.cache import cache
 
-from django_tg_bot.contrib.models import BotUpdateStatus, ChannelSponsor, Message
+from dj_telegram_bot.contrib.models import BotUpdateStatus, ChannelSponsor, Message
 
 
 @lru_cache
 def get_tm_client():
-    from django_tg_bot.core.telegram import Telegram
+    from dj_telegram_bot.core.telegram import Telegram
 
     return Telegram(
         token=settings.BOT_TOKEN,

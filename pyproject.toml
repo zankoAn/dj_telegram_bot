@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dj_telegram_bot"
-version = "0.1.1"
+version = "0.1.4"
 description = "The fastest way to build a production-ready Telegram bot on Django"
 authors = [
   { name = "zankoAN", email = "zankoAn4@gmail.com" }
@@ -41,7 +41,7 @@ Homepage = "https://github.com/zankoAn/dj_telegram_bot"
 Repository = "https://github.com/zankoAn/dj_telegram_bot"
 
 [tool.hatch.build.targets.wheel]
-packages = ["django_tg_bot"]
+packages = ["dj_telegram_bot"]
 
 [tool.ruff.format]
 docstring-code-format = true

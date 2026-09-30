@@ -5,8 +5,8 @@ from typing import Any, Dict, List, cast
 
 import requests
 
-from django_tg_bot.core.exceptions import TelegramAPIError
-from django_tg_bot.core.types import (
+from dj_telegram_bot.core.exceptions import TelegramAPIError
+from dj_telegram_bot.core.types import (
     AcceptedGiftTypes,
     BotAccessSettings,
     BotCommand,
@@ -201,6 +201,7 @@ class Telegram:
         cover=None,
         files={},
     ):
+
         if isinstance(file_obj, BufferedReader):
             files[field_name] = (
                 file_name or getattr(file_obj, "name", field_name),

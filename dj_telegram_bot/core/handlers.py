@@ -5,9 +5,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import make_password
 from django.utils.functional import cached_property
 
-from django_tg_bot.contrib.services import BotStatusService, MessageService
-from django_tg_bot.core.telegram import Telegram
-from django_tg_bot.core.types import (
+from dj_telegram_bot.contrib.services import BotStatusService, MessageService
+from dj_telegram_bot.core.telegram import Telegram
+from dj_telegram_bot.core.types import (
     CallbackQuery,
     Chat,
     InlineQuery,
