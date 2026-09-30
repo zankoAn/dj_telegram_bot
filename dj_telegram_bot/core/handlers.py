@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import make_password
@@ -21,23 +21,82 @@ logger = logging.getLogger(__name__)
 UserDB = get_user_model()
 
 
+class HandlerRegistry:
+    _registry: dict[str, list[tuple[type, str, str]]] = {
+        "command": [],
+        "message": [],
+        "callback": [],
+        "inline": [],
+    }
+
+    @classmethod
+    def register(
+        cls, handler_type: str, handler_class: type, pattern: str, method_name: str
+    ):
+        for existing_class, existing_pattern, _ in cls._registry[handler_type]:
+            if existing_pattern == pattern and existing_class == handler_class:
+                logger.warning(
+                    f"Handler '{pattern}' already registered in {handler_class.__name__}"
+                )
+                return
+
+        cls._registry[handler_type].append((handler_class, pattern, method_name))
+        logger.debug(
+            f"Registered: {handler_type} '{pattern}' -> {handler_class.__name__}.{method_name}"
+        )
+
+    @classmethod
+    def find_handler(cls, handler_type: str, key: str, user_step: str):
+        for handler_class, pattern, method_name in cls._registry.get(handler_type, []):
+            # step match
+            if pattern == user_step:
+                return handler_class, method_name
+
+            # exact match
+            if pattern == key:
+                return handler_class, method_name
+
+            # pattern match
+            if cls._matches(pattern, key):
+                return handler_class, method_name
+
+        return None
+
+    @staticmethod
+    def _matches(pattern: str, key: str) -> bool:
+        if "*" not in pattern:
+            return False
+
+        if pattern.endswith("*") and not pattern.startswith("*"):
+            prefix = pattern[:-1]
+            return key == prefix or key.startswith(prefix)
+
+        elif pattern.startswith("*") and not pattern.endswith("*"):
+            return key.endswith(pattern[1:])
+
+        elif pattern.startswith("*") and pattern.endswith("*"):
+            return pattern[1:-1] in key
+
+
 class BaseHandler:
     """
     Base handler class that provides common utilities for processing Telegram updates,
     such as accessing user, chat, and message details.
     """
 
-    _handlers: dict[str, Callable] = {}
-    ALL_KEY = "__all__"
+    handler_type: str = None
+    key_attribute: str = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls._handlers = {}
+
+        for name, method in cls.__dict__.items():
+            if hasattr(method, "_handler_pattern"):
+                pattern = method._handler_pattern
+                handler_type = getattr(method, "_handler_type", "generic")
+                HandlerRegistry.register(handler_type, cls, pattern, name)
 
     def __init__(self, update: Update, bot: Telegram):
-        """
-        Initializes the handler with the incoming update and bot instance.
-        """
         self.update = update
         self.bot = bot
 
@@ -132,26 +191,6 @@ class BaseHandler:
     def user_step(self) -> str:
         return self.user_obj.step if self.user_obj else ""
 
-    @classmethod
-    def add_handler(cls, func: Callable, key):
-        if key:
-            key = key.replace(" ", "_")
-        else:
-            key = cls.ALL_KEY
-
-        if key in cls._handlers:
-            logger.warning(f"Handler for '{key}' is being overridden!")
-
-        cls._handlers[key] = func
-
-    @classmethod
-    def register(cls, key: str | None = None):
-        def decorator(func):
-            cls.add_handler(func, key)
-            return func
-
-        return decorator
-
     def is_private(self) -> bool:
         if self.chat:
             return self.chat.type == "private"
@@ -201,41 +240,80 @@ class BaseHandler:
         if self.is_update_mode() or self.is_user_block():
             return True
 
-    def dispatch(self, *keys: str):
-        for key in (*keys, self.user_step, self.ALL_KEY):
-            key = key.replace(" ", "_")
-            handler = self._handlers.get(key)
-            if handler:
-                return handler(self)
+        if self.key_attribute:
+            key = getattr(self, self.key_attribute, None)
+            if key:
+                return self._execute_handler(self.handler_type, key, self.user_step)
 
-
-class CallBackQueryHandler(BaseHandler):
-    def handle(self):
-        if super().handle():
-            return
-
-        return self.dispatch(self.callback_data)
-
-
-class InlineQueryHandler(BaseHandler):
-    def handle(self):
-        if super().handle():
-            return True
-
-        return self.dispatch()
+    def _execute_handler(self, handler_type: str, key: str, user_step: str):
+        result = HandlerRegistry.find_handler(handler_type, key, user_step)
+        if result:
+            handler_class, method_name = result
+            instance = handler_class(self.update, self.bot)
+            method = getattr(instance, method_name)
+            return method()
+        return None
 
 
 class CommandHandler(BaseHandler):
-    def handle(self):
-        if super().handle():
-            return
-
-        return self.dispatch(self.command)
+    handler_type = "command"
+    key_attribute = "command"
 
 
 class MessageHandler(BaseHandler):
-    def handle(self):
-        if super().handle():
-            return
+    handler_type = "message"
+    key_attribute = "text"
 
-        return self.dispatch(self.text)
+
+class CallBackQueryHandler(BaseHandler):
+    handler_type = "callback"
+    key_attribute = "callback_data"
+
+
+class InlineQueryHandler(BaseHandler):
+    handler_type = "inline"
+    key_attribute = "query"
+
+
+def command_handler(pattern: str):
+    """✅ Command handler decorator"""
+
+    def decorator(func):
+        func._handler_pattern = pattern
+        func._handler_type = "command"
+        return func
+
+    return decorator
+
+
+def message_handler(pattern: str):
+    """✅ Message handler decorator"""
+
+    def decorator(func):
+        func._handler_pattern = pattern
+        func._handler_type = "message"
+        return func
+
+    return decorator
+
+
+def callback_handler(pattern: str):
+    """✅ Callback handler decorator"""
+
+    def decorator(func):
+        func._handler_pattern = pattern
+        func._handler_type = "callback"
+        return func
+
+    return decorator
+
+
+def inline_handler(pattern: str):
+    """✅ Inline handler decorator"""
+
+    def decorator(func):
+        func._handler_pattern = pattern
+        func._handler_type = "inline"
+        return func
+
+    return decorator
