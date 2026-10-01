@@ -1,8 +1,9 @@
 from dj_telegram_bot.core.handlers import (
     CallBackQueryHandler,
     CommandHandler,
-    InlineQueryHandler,
     MessageHandler,
+    InlineQueryHandler,
+    ChosenInlineResultHandler
 )
 from dj_telegram_bot.core.telegram import Telegram
 from dj_telegram_bot.core.types import Update
@@ -36,6 +37,9 @@ class Dispatcher:
     def dispatch(self):
         if self.update.inline_query:
             return InlineQueryHandler(update=self.update, bot=self.bot).handle()
+
+        if self.update.chosen_inline_result:
+            return ChosenInlineResultHandler(update=self.update, bot=self.bot).handle()
 
         if self.update.callback_query:
             return CallBackQueryHandler(update=self.update, bot=self.bot).handle()

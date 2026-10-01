@@ -281,6 +281,9 @@ class BaseHandler:
     def callback_data(self) -> str:
         return self.callback_query.data if self.callback_query else ""
 
+    @property
+    def query(self) -> str:
+        return self.inline_query.query if self.inline_query else ""
 
     @property
     def message(self) -> Message:
@@ -463,10 +466,25 @@ class InlineQueryHandler(BaseHandler):
     key_attribute = "query"
 
 
+class ChosenInlineResultHandler(BaseHandler):
+    handler_type = "chosen"
+    key_attribute = "result_id"
 
+    @property
+    def chosen(self):
+        return self.update.chosen_inline_result
 
+    @property
+    def result_id(self) -> str:
+        return self.chosen.result_id if self.chosen else ""
 
+    @property
+    def query(self) -> str:
+        return self.chosen.query if self.chosen else ""
 
+    @property
+    def user(self):
+        return self.chosen.from_user if self.chosen else super().user
 
 
 def make_decorator(
@@ -493,6 +511,7 @@ command_handler = make_decorator("command")
 message_handler = make_decorator("message")
 callback_handler = make_decorator("callback")
 inline_handler = make_decorator("inline")
+chosen_handler = make_decorator("chosen")
 
 # match on the user's step instead of the incoming text/data
 message_step_handler = make_decorator("message", step=True)
