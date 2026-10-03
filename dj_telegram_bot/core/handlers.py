@@ -90,14 +90,17 @@ class BaseHandler:
         """
         Returns the chat object from the update, if available.
         """
-        chat = None
-        if self.message:
-            chat = self.message.chat
+        cq = self.callback_query
+        if cq and cq.message:
+            return cast(Chat, cq.message.chat)
 
-        if self.callback_query and self.callback_query.message:
-            chat = self.callback_query.message.chat
+        if self.inline_query and self.inline_query.id:
+            return cast(Chat, self.inline_query.from_user)
 
-        return cast(Chat, chat)
+        if self.update.message:
+            return cast(Chat, self.update.message.chat)
+
+        return cast(Chat, None)
 
     @property
     def user(self) -> User:
@@ -126,8 +129,14 @@ class BaseHandler:
 
     @cached_property
     def user_obj(self) -> UserDB:
-        if not self.is_private() or not self.user:
+        if not self.user:
             return cast(UserDB, None)
+
+        if not self.is_private():
+            try:
+                self.bot.send_chat_action(self.chat_id, "typing")
+            except Exception:
+                return cast(UserDB, None)
 
         user, _ = UserDB.objects.get_or_create(
             user_id=self.user_id,
@@ -145,11 +154,11 @@ class BaseHandler:
         return self.user_obj.step if self.user_obj else ""
 
     def is_private(self) -> bool:
-        if self.chat:
-            return self.chat.type == "private"
-
         if self.inline_query and self.inline_query.from_user:
             return self.inline_query.chat_type in ["private", "sender"]
+
+        if self.chat:
+            return self.chat.type == "private"
 
         return False
 
