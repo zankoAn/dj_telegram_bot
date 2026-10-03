@@ -56,6 +56,7 @@ class MessageAdmin(admin.ModelAdmin):
         "request_location",
         "web_app",
         "login_url",
+        "switch_inline_query_current_chat",
     )
 
     def save_model(self, request, obj, form, change):
@@ -112,4 +113,8 @@ class MessageAdmin(admin.ModelAdmin):
 
     def _extract_button_data(self, btn_data):
         raw = btn_data.get("data") or {}
+
+        if raw.get("switch_inline_query_current_chat") == "None":
+            raw["switch_inline_query_current_chat"] = ""
+
         return {field: raw.get(field) for field in self.BUTTON_DATA_FIELDS}

@@ -254,8 +254,13 @@
                         <div>
                             <label for="btn-login-url" class="text-xs font-semibold text-admin-quiet block mb-2">Login Url</label>
                             <input id="btn-login-url" type="text" placeholder="login url"
-                                class="rounded-xl w-full bg-admin-dark text-admin-fg border border-admin-border px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-4 focus:ring-admin-primary/20 text-sm">
+                            class="rounded-xl w-full bg-admin-dark text-admin-fg border border-admin-border px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-4 focus:ring-admin-primary/20 text-sm">
                         </div>
+                    </div>
+                    <div>
+                        <label for="btn-switch-inline-query-current-chat" class="text-xs font-semibold text-admin-quiet block mb-2">Switch Inline Query</label>
+                        <input id="btn-switch-inline-query-current-chat" type="text" placeholder="Inline Query"
+                            class="rounded-xl w-full bg-admin-dark text-admin-fg border border-admin-border px-4 py-3 focus:outline-none focus:border-admin-primary focus:ring-4 focus:ring-admin-primary/20 text-sm">
                     </div>
                 </div>
 
@@ -595,6 +600,7 @@
             document.getElementById('btn-callback').value = btn.data?.callback_data || '';
             document.getElementById('btn-copy-text').value = btn.data?.copy_text || '';
             document.getElementById('btn-login-url').value = btn.data?.login_url || '';
+            document.getElementById('btn-switch-inline-query-current-chat').value = btn.data?.switch_inline_query_current_chat || '';
         } else {
             document.getElementById('btn-request-contact').checked = btn.data?.request_contact || false;
             document.getElementById('btn-request-location').checked = btn.data?.request_location || false;
@@ -643,6 +649,9 @@
             if (document.getElementById('btn-login-url').value) {
                 btn.data.login_url = document.getElementById('btn-login-url').value.trim();
             }
+            if (document.getElementById('btn-switch-inline-query-current-chat').value) {
+                btn.data.switch_inline_query_current_chat = document.getElementById('btn-switch-inline-query-current-chat').value.trim();
+            }
 
             if (btn.data.callback_data && btn.data.url) {
                 showErrorModal(`
@@ -663,7 +672,17 @@
                     return;
                 }
             }
-            else if (!btn.data.callback_data && !btn.data.url && !btn.data.web_app && !btn.data.login_url) {
+            if (btn.data.switch_inline_query_current_chat) {
+                if (btn.data.callback_data || btn.data.url || btn.data.web_app || btn.data.copy_text || btn.data.login_url) {
+                    showErrorModal(`
+                        دکمه <strong>Switch Inline Query</strong> نمی‌تواند با فیلدهای دیگر ترکیب شود.
+                        <br><br>
+                        لطفاً سایر فیلدها را خالی کنید.
+                    `);
+                    return;
+                }
+            }
+            else if (!btn.data.callback_data && !btn.data.url && !btn.data.web_app && !btn.data.login_url && !btn.data.switch_inline_query_current_chat) {
                 showErrorModal(`
                     دکمه اینلاین باید حداقل یکی از موارد زیر را داشته باشد:
                     <br><br>
@@ -671,7 +690,8 @@
                     • URL<br>
                     • Web App<br>
                     • Copy Text<br>
-                    • Login Url
+                    • Login Url<br>
+                    • Switch Inline Query
                 `);
                 return;
             }

@@ -89,6 +89,9 @@ class InlineKeyboardBuilder:
             web_app = button.data.get("web_app")
             copy_text = button.data.get("copy_text")
             login_url = button.data.get("login_url")
+            switch_inline_query_current_chat = button.data.get(
+                "switch_inline_query_current_chat"
+            )
             current_row.append(
                 InlineKeyboardButton(
                     text=button.text,
@@ -98,8 +101,8 @@ class InlineKeyboardBuilder:
                     web_app=WebAppInfo(url=web_app) if web_app else None,
                     copy_text=CopyTextButton(text=copy_text) if copy_text else None,
                     login_url=LoginUrl(url=login_url) if login_url else None,
+                    switch_inline_query_current_chat=switch_inline_query_current_chat,
                     switch_inline_query=override.switch_inline_query,
-                    switch_inline_query_current_chat=override.switch_inline_query_current_chat,
                     switch_inline_query_chosen_chat=override.switch_inline_query_chosen_chat,
                     callback_game=override.callback_game,
                     icon_custom_emoji_id=override.icon_custom_emoji_id,
