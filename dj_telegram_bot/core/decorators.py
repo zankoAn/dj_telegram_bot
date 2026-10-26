@@ -147,17 +147,26 @@ def sponsor_required(func):
     return wrapper
 
 
-def staff_required(func):
-    @wraps(func)
-    def wrapper(self: "BaseHandler", *args, **kwargs):
-        try:
-            user = self.user_obj
-        except LookupError:
-            return False
+def _user_flag_required(flag: str):
+    """Build a decorator that runs the handler only if the DB user has `flag` truthy."""
 
-        if not getattr(user, "is_staff", False):
-            return False
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self: "BaseHandler", *args, **kwargs):
+            try:
+                user = self.user_obj
+            except LookupError:
+                return False
 
-        return func(self, *args, **kwargs)
+            if not getattr(user, flag, False):
+                return False
 
-    return wrapper
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+staff_required = _user_flag_required("is_staff")
+superuser_required = _user_flag_required("is_superuser")
