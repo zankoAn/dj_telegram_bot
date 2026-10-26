@@ -36,12 +36,14 @@ class Route:
     """
     Holds everything needed to run one handler, in a single object.
 
+    Example:
         @message_handler("buy_*")
-        def buy(h): ...        ->   Route(trigger="buy_*", func=buy)
+        def buy(h): ...  -->  Route(trigger="buy_*", func=buy)
 
-    Where it is used:
-        update arrives -> Router.find() picks the matching Route
-                       -> BaseHandler._execute() calls its function
+    Execution Flow:
+        update arrives
+        --> Router.find() picks the matching Route
+        --> BaseHandler._execute() calls its function
     """
 
     trigger: str
@@ -83,7 +85,8 @@ class _Binding:
     """
     A to-do note left by a decorator: "register this function under this rule".
 
-        @message_handler("buy_*")   ->   _Binding("message", "buy_*")
+    Example:
+        @message_handler("buy_*")  -->  _Binding("message", "buy_*")
         def buy(h): ...
 
     Decorators run while the module is loading, before we know whether the
@@ -97,16 +100,16 @@ class _Binding:
     step: bool = False
 
 
-class _RouteDescriptor:
+class _MethodDescriptor:
     """
-    Lets us tell whether a decorated function is a plain function or a method.
+    Wraps a function and finds out whether it is a plain function or a method.
 
-    The decorator wraps the function in this object.
     If the function sits inside a class, Python automatically calls
-    __set_name__ on it, and that is how we find out.
+    __set_name__ on it, and that is how we learn the owner class and name.
 
+    Example:
         @message_handler("buy")
-        def buy(h): ...                  # no __set_name__ call -> plain function
+        def buy(h): ...                  # No __set_name__ call -> plain function
 
         class Shop(BaseHandler):
             @message_handler("buy")
@@ -117,8 +120,21 @@ class _RouteDescriptor:
         self.func = func
         self.owner: type | None = None
         self.name: str | None = None
-        self.bindings: list[_Binding] = []
         functools.update_wrapper(self, func, updated=())
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        self.owner, self.name = owner, name
+
+    def __get__(self, instance, owner=None):
+        return self if instance is None else MethodType(self.func, instance)
+
+
+class _RouteDescriptor(_MethodDescriptor):
+    """Descriptor for @*_handler"""
+
+    def __init__(self, func: Callable[..., Any]) -> None:
+        super().__init__(func)
+        self.bindings: list[_Binding] = []
 
     def add(self, router: Router, binding: _Binding) -> None:
         if binding in self.bindings:
@@ -140,14 +156,26 @@ class _RouteDescriptor:
             binding.step,
         )
 
-    def __get__(self, instance, owner=None):
-        return self if instance is None else MethodType(self.func, instance)
-
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
-    def __set_name__(self, owner: type, name: str) -> None:
-        self.owner, self.name = owner, name
+
+class _BeforeDescriptor(_MethodDescriptor):
+    """Descriptor for @before_handler"""
+
+    def __call__(self, handler):
+        if self.owner is None or self.name is None:
+            return self.func(handler)
+
+        if isinstance(handler, self.owner):
+            inst = handler
+        else:
+            inst = self.owner(handler.update, handler.bot)
+            # reuse the already-fetched DB user instead of querying again
+            if "_db_user" in handler.__dict__:
+                inst.__dict__["_db_user"] = handler.__dict__["_db_user"]
+
+        return getattr(inst, self.name)()
 
 
 class Router:
@@ -156,7 +184,6 @@ class Router:
 
     Every function registered with a decorator ends up in a Router.
     When an update arrives, we ask the Router to find the match:
-
         router.find("message", "buy_5")   ->   the Route registered for "buy_*"
 
     It checks in this order and returns the first match, or None if nothing
@@ -272,5 +299,6 @@ before_handlers: list[Callable[..., Any]] = []
 
 def before_handler(func):
     """Run before every handler; return True to stop and skip the handler."""
-    before_handlers.append(func)
-    return func
+    desc = func if isinstance(func, _BeforeDescriptor) else _BeforeDescriptor(func)
+    before_handlers.append(desc)
+    return desc
