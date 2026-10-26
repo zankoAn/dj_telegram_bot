@@ -145,3 +145,19 @@ def sponsor_required(func):
         return func(self, *args, **kwargs)
 
     return wrapper
+
+
+def staff_required(func):
+    @wraps(func)
+    def wrapper(self: "BaseHandler", *args, **kwargs):
+        try:
+            user = self.user_obj
+        except LookupError:
+            return False
+
+        if not getattr(user, "is_staff", False):
+            return False
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
