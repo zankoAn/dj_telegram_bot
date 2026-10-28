@@ -4,7 +4,7 @@
 
 # Django Telegram Bot
 
-**Build Telegram bots like your Django apps.**
+**Build your Telegram bots in a Django way.**
 
 Decorator routing · Messages and keyboards in the admin · Fully typed
 

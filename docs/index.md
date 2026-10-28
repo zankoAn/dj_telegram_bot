@@ -6,7 +6,7 @@ hide:
 
 <div class="hero" markdown>
 
-# Build Telegram bots<br>like your Django apps.
+# Build your Telegram bots<br>in a Django way.
 
 Decorator routing. Edit messages and keyboards from the admin. Fully typed.
 
