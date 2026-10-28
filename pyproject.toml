@@ -55,5 +55,7 @@ exclude = [
   ".pytest_cache",
   "build",
   "dist",
+  "docs",
+  "mkdocs.yml",
   "assets",
 ]
