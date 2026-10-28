@@ -51,6 +51,7 @@ docstring-code-line-length = 60
 exclude = [
   ".venv",
   ".git",
+  ".github",
   "__pycache__",
   ".pytest_cache",
   "build",
