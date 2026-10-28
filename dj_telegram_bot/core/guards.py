@@ -27,8 +27,10 @@ class SponsorGuard:
     DEFAULT_PROMPT_TEXT = "To use the bot, please join the channels below."
     DEFAULT_ERROR_TEXT = "Please join the sponsor channels first, then try again."
 
-    def __init__(self, handler: "BaseHandler"):
+    def __init__(self, handler: "BaseHandler", on_inline=None, on_callback=None):
         self.h = handler
+        self.custom_inline = on_inline
+        self.custom_callback = on_callback
 
     @staticmethod
     def _db_text(key: str, default: str) -> str:
@@ -103,25 +105,20 @@ class SponsorGuard:
             reply_markup=self.build_markup(channels),
         )
 
+
     def on_inline_message_callback(self, channels) -> None:
-        hook = getattr(self.h, "on_sponsor_callback", None)
-        if callable(hook):
-            hook(channels)
-            return
+        if self.custom_callback:
+            return self.custom_callback(self.h, channels)
 
         text = self._db_text(self.ERROR_TEXT_KEY, self.DEFAULT_ERROR_TEXT)
         self.h.bot.answer_callback_query(
-            self.h.callback_query.id,
-            text=text,
-            show_alert=True,
+            self.h.callback_query.id, text=text, show_alert=True
         )
 
     def on_inline(self, channels) -> None:
         """Override or set handler.on_sponsor_inline to customize the inline answer."""
-        hook = getattr(self.h, "on_sponsor_inline", None)
-        if callable(hook):
-            hook(channels)
-            return
+        if self.custom_inline:
+            return self.custom_inline(self.h, channels)
 
         text = self._db_text(self.ERROR_TEXT_KEY, self.DEFAULT_ERROR_TEXT)
         article = InlineQueryResultArticle(
@@ -133,18 +130,24 @@ class SponsorGuard:
             self.h.inline_query.id, [article], cache_time=0, is_personal=True
         )
 
+
     enforce = ensure_joined  # backward compatibility
 
 
-def sponsor_required(func):
-    @wraps(func)
-    def wrapper(self: "BaseHandler", *args, **kwargs):
-        if not SponsorGuard(self).ensure_joined():
-            return False
+def sponsor_required(func=None, *, on_inline=None, on_callback=None):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(self: "BaseHandler", *args, **kwargs):
+            guard = SponsorGuard(self, on_inline=on_inline, on_callback=on_callback)
+            if not guard.ensure_joined():
+                return False
 
-        return func(self, *args, **kwargs)
+            return fn(self, *args, **kwargs)
 
-    return wrapper
+        return wrapper
+
+    return decorator(func) if func is not None else decorator
+
 
 
 def _user_flag_required(flag: str):
