@@ -167,13 +167,11 @@ class _BeforeDescriptor(_MethodDescriptor):
         if self.owner is None or self.name is None:
             return self.func(handler)
 
-        if isinstance(handler, self.owner):
-            inst = handler
-        else:
-            inst = self.owner(handler.update, handler.bot)
-            # reuse the already-fetched DB user instead of querying again
-            if "_db_user" in handler.__dict__:
-                inst.__dict__["_db_user"] = handler.__dict__["_db_user"]
+        inst = (
+            handler
+            if isinstance(handler, self.owner)
+            else handler._rebuild_as_class(self.owner)
+        )
 
         return getattr(inst, self.name)()
 
@@ -201,6 +199,7 @@ class Router:
         self._exact: dict[str, dict[str, Route]] = defaultdict(dict)
         self._wildcards: dict[str, list[Route]] = defaultdict(list)
         self._pending: list[tuple[_RouteDescriptor, _Binding]] = []
+        self.before: list[Callable[..., Any]] = []
 
     def defer(self, desc: _RouteDescriptor, binding: _Binding) -> None:
         self._pending.append((desc, binding))
@@ -257,6 +256,7 @@ class Router:
         self._exact.clear()
         self._wildcards.clear()
         self._pending.clear()
+        self.before.clear()
 
 
 default_router = Router()
@@ -293,12 +293,15 @@ message_step_handler = make_decorator("message", step=True)
 callback_step_handler = make_decorator("callback", step=True)
 
 
-# checks that run before every handler
-before_handlers: list[Callable[..., Any]] = []
-
-
-def before_handler(func):
+def before_handler(func=None, *, router: Router | None = None):
     """Run before every handler; return True to stop and skip the handler."""
-    desc = func if isinstance(func, _BeforeDescriptor) else _BeforeDescriptor(func)
-    before_handlers.append(desc)
-    return desc
+
+    def decorator(f):
+        r = router or default_router
+        desc = f if isinstance(f, _BeforeDescriptor) else _BeforeDescriptor(f)
+        if all(d.func is not desc.func for d in r.before):
+            r.before.append(desc)
+
+        return desc
+
+    return decorator(func) if func else decorator
