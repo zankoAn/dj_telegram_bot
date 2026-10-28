@@ -21,26 +21,24 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "build>=1.6.1",
     "django>=6.0",
     "pydantic>=2.13.4",
     "requests>=2.34.2",
-    "twine>=6.2.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "django-stubs>=6.0",
 ]
 
 [dependency-groups]
 dev = [
+    "build>=1.6.1",
     "twine>=6.2.0",
+    "mkdocs-material>=9.8.0",
+    "django-stubs>=6.1.2",
 ]
 
 [project.urls]
 Homepage = "https://github.com/zankoAn/dj_telegram_bot"
+Documentation = "https://zankoan.github.io/dj_telegram_bot/"
 Repository = "https://github.com/zankoAn/dj_telegram_bot"
+Changelog = "https://zankoan.github.io/dj_telegram_bot/changelog/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["dj_telegram_bot"]
